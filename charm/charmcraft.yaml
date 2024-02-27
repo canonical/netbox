@@ -1,0 +1,54 @@
+# Copyright 2024 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+# This file configures Charmcraft.
+# See https://juju.is/docs/sdk/charmcraft-config for guidance.
+
+name: netbox
+
+type: charm
+
+bases:
+  - build-on:
+    - name: ubuntu
+      channel: "22.04"
+    run-on:
+    - name: ubuntu
+      channel: "22.04"
+
+# (Required)
+summary: NetBox.
+
+# (Required)
+description: |
+  A comprehensive overview of your Django application.
+
+extensions:
+  - django-framework
+
+requires:
+  postgresql:
+    interface: postgresql_client
+    limit: 1
+
+config:
+  options:
+    redis_hostname:
+      description: Redis hostname
+      type: string
+    redis_port:
+      description: Redis port
+      type: int
+      default: 6379
+    redis_username:
+      description: Redis username
+      type: string
+      default: ''
+    redis_password:
+      description: Redis password
+      type: string
+      default: ''
+    base_path:
+      description: Base path of the application
+      type: string
+      default: ''

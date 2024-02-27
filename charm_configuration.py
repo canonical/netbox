@@ -113,7 +113,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Base URL path if accessing NetBox within a directory. For example, if installed at https://example.com/netbox/, set:
 # BASE_PATH = 'netbox/'
-BASE_PATH = ''
+BASE_PATH = os.environ.get('DJANGO_SECRET_KEY', '')
 INTERNAL_IPS = ('127.0.0.1', '::1')
 
 # Enable custom logging. Please see the Django documentation for detailed guidance on configuring custom logs:
