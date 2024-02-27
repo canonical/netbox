@@ -94,8 +94,11 @@ parts:
             wireless: "django/app/wireless"
         override-pull: |-
             craftctl default
+            # Very ugly
             [ ! -d netbox.orig ] && mv netbox netbox.orig && cp -R netbox.orig/* .
             cp charm_configuration.py ./netbox/configuration.py
+            [ ! -f netbox/original_settings.py ] && mv netbox/settings.py netbox/original_settings.py
+            cp charm_settings.py ./netbox/settings.py
         after:
             - django-framework/dependencies
         override-build: |-
