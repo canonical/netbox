@@ -37,6 +37,7 @@ parts:
             - "django/app/project-static"
             - "django/app/reports"
             - "django/app/scripts"
+            - "django/app/static"
             - "django/app/templates"
             - "django/app/tenancy"
             - "django/app/translations"
@@ -59,6 +60,7 @@ parts:
             - "django/app/project-static"
             - "django/app/reports"
             - "django/app/scripts"
+            - "django/app/static"
             - "django/app/templates"
             - "django/app/tenancy"
             - "django/app/translations"
@@ -81,6 +83,7 @@ parts:
             project-static: "django/app/project-static"
             reports: "django/app/reports"
             scripts: "django/app/scripts"
+            static: "django/app/static"
             templates: "django/app/templates"
             tenancy: "django/app/tenancy"
             translations: "django/app/translations"
@@ -91,14 +94,22 @@ parts:
             wireless: "django/app/wireless"
         override-pull: |-
             craftctl default
-            mv netbox netbox.orig
-            cp -R netbox.orig/* .
+            [ ! -d netbox.orig ] && mv netbox netbox.orig && cp -R netbox.orig/* .
             cp charm_configuration.py ./netbox/configuration.py
+        after:
+            - django-framework/dependencies
+        override-build: |-
+            # A bit ugly...
+            NETBOX_CONFIGURATION=netbox.configuration_testing PYTHONUSERBASE=${CRAFT_STAGE} python3 manage.py collectstatic --no-input
+            craftctl default
     # pyproject.toml breaks the building
     django-framework/dependencies:
         override-build: |-
             rm -f pyproject.toml
             craftctl default
+        python-packages:
+            - whitenoise
+
 
 services:
   django:
