@@ -8,14 +8,11 @@ from pytest_operator.plugin import OpsTest
 async def test_broken(ops_test: OpsTest, netbox_app, get_unit_ips):
 
     unit_ips = await get_unit_ips("netbox")
-    breakpoint()
     for unit_ip in unit_ips:
         sess = requests.session()
 
         url = f"http://{unit_ip}:8000"
         res = sess.get(url, timeout=20,)
-        print("response", res)
-        print("response content", res.content)
         assert res.status_code == 200
         assert b"<title>Home | NetBox</title>" in res.content
 
