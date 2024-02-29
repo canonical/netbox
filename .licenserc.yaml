@@ -8,5 +8,14 @@ header:
   paths:
     - 'charm/**'
   paths-ignore:
+    - '**/*.cfg'
+    - '**/*.conf'
+    - '**/*.j2'
+    - '**/*.json'
+    - '**/*.md'
+    - '**/*.rule'
+    - '**/*.tmpl'
+    - '**/*.txt'
+    - 'charm/.gitignore'
     - 'charm/lib/**'
   comment: on-failure
