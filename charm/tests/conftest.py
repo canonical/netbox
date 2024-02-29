@@ -5,7 +5,8 @@
 
 from pytest import Parser
 
-DJANGO_APP_IMAGE_PARAM = "--django-app-image"
+NETBOX_IMAGE_PARAM = "--netbox-image"
+
 
 def pytest_addoption(parser: Parser) -> None:
     """Parse additional pytest options.
@@ -13,4 +14,5 @@ def pytest_addoption(parser: Parser) -> None:
     Args:
         parser: Pytest parser.
     """
-    parser.addoption(DJANGO_APP_IMAGE_PARAM, action="store", help="Django app image to be deployed")
+    parser.addoption(NETBOX_IMAGE_PARAM, action="store", help="Netbox app image to be deployed")
+    parser.addoption("--charm-file", action="store", help="Charm file to be deployed")

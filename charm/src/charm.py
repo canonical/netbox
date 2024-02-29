@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright 2024 Ubuntu
+# Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """Flask Charm entrypoint."""
@@ -8,7 +8,6 @@ import logging
 import typing
 
 import ops
-
 import xiilib.django
 
 logger = logging.getLogger(__name__)
