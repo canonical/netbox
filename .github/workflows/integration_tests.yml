@@ -12,3 +12,5 @@ jobs:
       juju-channel: 3.1/stable
       channel: 1.28-strict/stable
       tmate-debug: true
+      rockcraft-repository: weiiwang01/rockcraft
+      rockcraft-ref: feat-12f-django
