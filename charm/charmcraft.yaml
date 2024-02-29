@@ -52,3 +52,11 @@ config:
       description: Base path of the application
       type: string
       default: ''
+
+parts:
+  charm:
+    override-build: |-
+      rustup default stable
+      craftctl default
+    build-snaps:
+      - rustup
