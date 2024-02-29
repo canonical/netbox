@@ -15,7 +15,6 @@ from pytest_operator.plugin import OpsTest
 
 from tests.conftest import NETBOX_IMAGE_PARAM
 
-
 logger = logging.getLogger(__name__)
 
 
