@@ -5,7 +5,7 @@ import requests
 from pytest_operator.plugin import OpsTest
 
 
-async def test_broken(ops_test: OpsTest, netbox_app, get_unit_ips):
+async def test_netbox_health(ops_test: OpsTest, netbox_app, get_unit_ips):
 
     unit_ips = await get_unit_ips("netbox")
     for unit_ip in unit_ips:
