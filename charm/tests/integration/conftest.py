@@ -4,6 +4,8 @@
 """Fixtures for NetBox charm integration tests."""
 
 import json
+import logging
+import os.path
 
 import pytest
 import pytest_asyncio
@@ -12,6 +14,9 @@ from pytest import Config
 from pytest_operator.plugin import OpsTest
 
 from tests.conftest import NETBOX_IMAGE_PARAM
+
+
+logger = logging.getLogger(__name__)
 
 
 @pytest_asyncio.fixture(scope="module", name="get_unit_ips")
@@ -67,6 +72,9 @@ async def netbox_charm_fixture(pytestconfig: Config):
     """Get value from parameter charm-file."""
     charm = pytestconfig.getoption("--charm-file")
     assert charm, "--charm-file must be set"
+    if not os.path.exists(charm):
+        logger.info("Using parent directory for charm file")
+        charm = os.path.join("..", charm)
     return charm
 
 
