@@ -77,7 +77,7 @@ jobs:
           woke-version: latest
   get-runner-image:
     name: Get runner image
-    uses: ./.github/workflows/get_runner_image.yaml
+    uses: canonical/operator-workflows/.github/workflows/get_runner_image.yaml
   shellcheck-lint:
     name: Shell scripts lint
     runs-on: >-
