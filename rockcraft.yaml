@@ -4,7 +4,7 @@
 name: netbox
 base: ubuntu@22.04
 version: '0.1'
-summary: Charmed NetBox project (https://github.com/netbox-community/netbox/)
+summary: Charmed NetBox project (https://github.com/canonical/netbox/)
 description: |
     NetBox is the go-to solution for modeling and documenting network
     infrastructure for thousands of organizations worldwide. As a successor
