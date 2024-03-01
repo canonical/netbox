@@ -22,6 +22,7 @@ class DjangoCharm(xiilib.django.Charm):
         Args:
             args: passthrough to CharmBase.
         """
+        # pylint: disable=useless-parent-delegation
         super().__init__(*args)
 
 

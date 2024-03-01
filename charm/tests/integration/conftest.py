@@ -10,12 +10,23 @@ import os.path
 import pytest
 import pytest_asyncio
 from juju.action import Action
+from juju.model import Model
 from pytest import Config
 from pytest_operator.plugin import OpsTest
 
 from tests.conftest import NETBOX_IMAGE_PARAM
 
 logger = logging.getLogger(__name__)
+
+# caused by pytest fixtures, mark does not work in fixtures
+# pylint: disable=too-many-arguments, unused-argument
+
+
+@pytest_asyncio.fixture(scope="module", name="model")
+async def model_fixture(ops_test: OpsTest) -> Model:
+    """Return the current testing juju model."""
+    assert ops_test.model
+    return ops_test.model
 
 
 @pytest_asyncio.fixture(scope="module", name="get_unit_ips")
@@ -48,14 +59,17 @@ def postgresql_app_name_fixture() -> str:
     return "postgresql-k8s"
 
 
-# @pytest.mark.skip_if_deployed
 @pytest_asyncio.fixture(scope="module", name="postgresql_app")
 async def postgresql_app_fixture(
-    ops_test: OpsTest, postgresql_app_name: str, pytestconfig: Config
+    ops_test: OpsTest,
+    postgresql_app_name: str,
+    model: Model,
 ):
+    """Deploy postgresql."""
     async with ops_test.fast_forward():
-        await ops_test.model.deploy(postgresql_app_name, channel="14/stable", trust=True)
-        await ops_test.model.wait_for_idle(status="active")
+        app = await model.deploy(postgresql_app_name, channel="14/stable", trust=True)
+        await model.wait_for_idle(status="active")
+    return app
 
 
 @pytest_asyncio.fixture(scope="module", name="netbox_app_image")
@@ -80,18 +94,20 @@ async def netbox_charm_fixture(pytestconfig: Config):
 @pytest_asyncio.fixture(scope="module", name="netbox_app")
 async def netbox_app_fixture(
     ops_test: OpsTest,
+    model: Model,
     netbox_charm: str,
     netbox_app_image,
     postgresql_app_name,
     get_unit_ips,
     redis_password,
-    postgresql_app,  # do not use
+    postgresql_app,
 ):
+    """Deploy netbox app."""
     resources = {
         "django-app-image": netbox_app_image,
     }
     redis_ips = await get_unit_ips("redis-k8s")
-    app = await ops_test.model.deploy(
+    app = await model.deploy(
         f"./{netbox_charm}",
         resources=resources,
         config={
@@ -102,28 +118,29 @@ async def netbox_app_fixture(
         },
     )
     async with ops_test.fast_forward():
-        await ops_test.model.wait_for_idle(apps=["netbox"], status="waiting")
+        await model.wait_for_idle(apps=["netbox"], status="waiting")
 
-    await ops_test.model.relate("netbox:postgresql", f"{postgresql_app_name}")
-    await ops_test.model.wait_for_idle(status="active")
+    await model.relate("netbox:postgresql", f"{postgresql_app_name}")
+    await model.wait_for_idle(status="active")
     return app
 
 
 @pytest_asyncio.fixture(scope="module", name="redis_app")
-async def redis_app_fixture(ops_test: OpsTest):
-    app = await ops_test.model.deploy("redis-k8s", channel="edge")
-    await ops_test.model.wait_for_idle(apps=["redis-k8s"], status="active")
+async def redis_app_fixture(model: Model):
+    """Deploy redis-k8s."""
+    app = await model.deploy("redis-k8s", channel="edge")
+    await model.wait_for_idle(apps=["redis-k8s"], status="active")
     return app
 
 
-# @pytest.mark.skip_if_deployed
 @pytest_asyncio.fixture(scope="module", name="redis_password")
 async def redis_password_fixture(
-    ops_test: OpsTest,
-    redis_app,  # do not use
+    model: Model,
+    redis_app,
 ):
+    """Get redis password from action."""
     password_action: Action = (
-        await ops_test.model.applications["redis-k8s"]
+        await model.applications["redis-k8s"]
         .units[0]
         .run_action(  # type: ignore
             "get-initial-admin-password",

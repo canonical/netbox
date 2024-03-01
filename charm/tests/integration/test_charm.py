@@ -1,33 +1,32 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+"""Integration tests NetBox charm."""
+import pytest
 import requests
-from pytest_operator.plugin import OpsTest
 
 
-async def test_netbox_health(ops_test: OpsTest, netbox_app, get_unit_ips):
-
+@pytest.mark.usefixtures("netbox_app")
+async def test_netbox_health(get_unit_ips):
+    """
+    arrange: build and deploy the NetBox charm.
+    act: Do a get request to the main page and to an asset.
+    assert: Both return 200 and the page contains the correct title.
+    """
     unit_ips = await get_unit_ips("netbox")
     for unit_ip in unit_ips:
-        sess = requests.session()
 
         url = f"http://{unit_ip}:8000"
-        res = sess.get(
+        res = requests.get(
             url,
             timeout=20,
         )
         assert res.status_code == 200
         assert b"<title>Home | NetBox</title>" in res.content
 
-        url = f"http://{unit_ip}:8000/"
-        res = sess.get(
-            url,
-            timeout=20,
-        )
-
         # Also  some random thing from the static dir.
         url = f"http://{unit_ip}:8000/static/netbox.ico"
-        res = sess.get(
+        res = requests.get(
             url,
             timeout=20,
         )

@@ -10,32 +10,13 @@ skips = ["*/*test.py", "*/test_*.py", "*tests/*.py"]
 [tool.coverage.run]
 branch = true
 
-[tool.coverage.report]
-fail_under = 0
-show_missing = true
-
-
-[tool.pytest.ini_options]
-minversion = "6.0"
-log_cli_level = "INFO"
-markers = [
-    "requires_secrets: mark tests that require external secrets",
-    "cos: mark tests that require a COS integration",
-    "nginx: mark tests that require an nginx integration",
-    "s3: mark tests that require an s3 integration (via localstack)"
-]
-
-[tool.pylint.'MESSAGES CONTROL']
-extension-pkg-whitelist = "pydantic"
-
 # Formatting tools configuration
 [tool.black]
 line-length = 99
 target-version = ["py38"]
 
-[tool.isort]
-line_length = 99
-profile = "black"
+[tool.coverage.report]
+show_missing = true
 
 # Linting tools configuration
 [tool.flake8]
@@ -50,17 +31,46 @@ ignore = ["W503", "E501", "D107"]
 # D100, D101, D102, D103: Ignore missing docstrings in tests
 per-file-ignores = ["tests/*:D100,D101,D102,D103,D104,D205,D212,D415"]
 docstring-convention = "google"
-# Check for properly formatted copyright header in each file
-copyright-check = "True"
-copyright-author = "Canonical Ltd."
-copyright-regexp = "Copyright\\s\\d{4}([-,]\\d{4})*\\s+%(author)s"
-classmethod-decorators = ['classmethod', 'validator', 'root_validator']
+
+[tool.isort]
+line_length = 99
+profile = "black"
 
 [tool.mypy]
 ignore_missing_imports = true
-check_untyped_defs = true
-disallow_untyped_defs = true
+explicit_package_bases = true
+namespace_packages = true
 
-[[tool.mypy.overrides]]
-module = "tests.*"
-disallow_untyped_defs = false
+[tool.pylint]
+disable = "wrong-import-order"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+log_cli_level = "INFO"
+
+# Linting tools configuration
+[tool.ruff]
+line-length = 99
+select = ["E", "W", "F", "C", "N", "D", "I001"]
+extend-ignore = [
+    "D203",
+    "D204",
+    "D213",
+    "D215",
+    "D400",
+    "D404",
+    "D406",
+    "D407",
+    "D408",
+    "D409",
+    "D413",
+]
+ignore = ["E501", "D107"]
+extend-exclude = ["__pycache__", "*.egg_info"]
+per-file-ignores = {"tests/*" = ["D100","D101","D102","D103","D104"]}
+
+[tool.ruff.mccabe]
+max-complexity = 10
+
+[tool.codespell]
+skip = "build,lib,venv,icon.svg,.tox,.git,.mypy_cache,.ruff_cache,.coverage"
