@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class DjangoCharm(xiilib.django.Charm):
-    """Flask Charm service."""
+    """Django Charm service."""
 
     def __init__(self, *args: typing.Any) -> None:
         """Initialize the instance.

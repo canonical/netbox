@@ -9,7 +9,7 @@ import requests
 @pytest.mark.usefixtures("netbox_app")
 async def test_netbox_health(get_unit_ips):
     """
-    arrange: build and deploy the NetBox charm.
+    arrange: Build and deploy the NetBox charm.
     act: Do a get request to the main page and to an asset.
     assert: Both return 200 and the page contains the correct title.
     """
