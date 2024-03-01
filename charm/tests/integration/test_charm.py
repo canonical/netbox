@@ -2,12 +2,16 @@
 # See LICENSE file for licensing details.
 
 """Integration tests NetBox charm."""
+from typing import Callable, Coroutine, List
+
 import pytest
 import requests
 
 
 @pytest.mark.usefixtures("netbox_app")
-async def test_netbox_health(get_unit_ips):
+async def test_netbox_health(
+    get_unit_ips: Callable[[str], Coroutine[None, None, List[str]]]
+) -> None:
     """
     arrange: Build and deploy the NetBox charm.
     act: Do a get request to the main page and to an asset.
