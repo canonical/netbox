@@ -6,8 +6,6 @@
 
 import json
 import os
-import pathlib
-import pprint
 import urllib.parse
 
 # This is a list of valid fully-qualified domain names (FQDNs) for the NetBox server. NetBox will not permit write
@@ -19,7 +17,6 @@ ALLOWED_HOSTS = json.loads(os.environ.get("DJANGO_ALLOWED_HOSTS", "[]"))
 # PostgreSQL database configuration. See the Django documentation for a complete list of available parameters:
 #   https://docs.djangoproject.com/en/stable/ref/settings/#databases
 
-# TODO BE CAREFUL, THIS WILL ALSO WILL BE RUN IN THE MIGRATE, WITHOUT AN ENV VARIABLE!
 db_url = os.environ.get("POSTGRESQL_DB_CONNECT_STRING", "")
 parsed_db_url = urllib.parse.urlparse(db_url)
 
@@ -83,7 +80,7 @@ REDIS = {
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-SECRET_KEY
 
 # It is less than 50 characters in the 12 factor. Double the size.
-# TODO FIX THIS. It is ugly.
+# FIXME This is becausse currently the 12 factor in sending a small secret_key. Pending to fix.
 SECRET_KEY = os.environ['DJANGO_SECRET_KEY'] * 2
 
 
@@ -115,7 +112,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Base URL path if accessing NetBox within a directory. For example, if installed at https://example.com/netbox/, set:
 # BASE_PATH = 'netbox/'
-BASE_PATH = os.environ["DJANGO_BASE_PATH"]
+BASE_PATH = os.environ.get("DJANGO_BASE_PATH", "")
 
 # API Cross-Origin Resource Sharing (CORS) settings. If CORS_ORIGIN_ALLOW_ALL is set to True, all origins will be
 # allowed. Otherwise, define a list of allowed origins using either CORS_ORIGIN_WHITELIST or
@@ -140,16 +137,16 @@ DEBUG = os.environ.get("DJANGO_DEBUG", False)
 DEFAULT_LANGUAGE = 'en-us'
 
 # Email settings
-# EMAIL = {
-#     'SERVER': 'localhost',
-#     'PORT': 25,
-#     'USERNAME': '',
-#     'PASSWORD': '',
-#     'USE_SSL': False,
-#     'USE_TLS': False,
-#     'TIMEOUT': 10,  # seconds
-#     'FROM_EMAIL': '',
-# }
+EMAIL = {
+    'SERVER': 'localhost',
+    'PORT': 25,
+    'USERNAME': '',
+    'PASSWORD': '',
+    'USE_SSL': False,
+    'USE_TLS': False,
+    'TIMEOUT': 10,  # seconds
+    'FROM_EMAIL': '',
+}
 
 # Localization
 ENABLE_LOCALIZATION = False
@@ -174,27 +171,6 @@ INTERNAL_IPS = ('127.0.0.1', '::1')
 
 # Enable custom logging. Please see the Django documentation for detailed guidance on configuring custom logs:
 #   https://docs.djangoproject.com/en/stable/topics/logging/
-# LOGGING = {}
-
-# LOGGING = {
-#     "version": 1,
-#     "disable_existing_loggers": False,
-#     "handlers": {
-#         "console": {
-#             "class": "logging.StreamHandler",
-#         },
-#         "file": {
-#             'level': 'DEBUG',
-#             'class': 'logging.FileHandler',
-#             'filename': '/tmp/netbox.log',
-#         },
-#     },
-#     "root": {
-#         "handlers": ["console"],
-#         "level": "DEBUG",
-#     },
-# }
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -209,10 +185,11 @@ LOGGING = {
             'level': 'DEBUG',
             'formatter': 'normal',
         },
+        # FIXME this is problematic, as migrate is currently run as root.
         # 'file': {
         #     'level': 'DEBUG',
         #     'class': 'logging.handlers.WatchedFileHandler',
-        #     'filename': '/tmp/netbox.log', # this is problematic, as migrate is run as root :(
+        #     'filename': '/tmp/netbox.log',
         #     'formatter': 'normal',
         # },
     },

@@ -21,7 +21,8 @@ extensions:
 
 parts:
     # NetBox project does not suit the 12 factor project yet.
-    # Move things around to make it work.
+    # Until 12 factor django project supports the NetBox
+    # directory organisation, this changes are needed.
     django-framework/install-app:
         prime:
             - "django/app/account"
@@ -94,7 +95,9 @@ parts:
             wireless: "django/app/wireless"
         override-pull: |-
             craftctl default
-            # Very ugly
+            # We need to overwrite the settings and set the configuration.
+            # We could use a different DJANGO_SETTINGS_MODULE env var, but has to be
+            # used everywhere in that case.
             [ ! -d netbox.orig ] && mv netbox netbox.orig && cp -R netbox.orig/* .
             cp charm_configuration.py ./netbox/configuration.py
             [ ! -f netbox/original_settings.py ] && mv netbox/settings.py netbox/original_settings.py
@@ -102,20 +105,21 @@ parts:
         after:
             - django-framework/dependencies
         override-build: |-
-            # A bit ugly...
+            # At this point, the original configuration does not work correctly.
+            # Some missing env vars like DJANGO_SECRET_KEY...
             NETBOX_CONFIGURATION=netbox.configuration_testing PYTHONUSERBASE=${CRAFT_STAGE} python3 manage.py collectstatic --no-input
             craftctl default
-    # pyproject.toml breaks the building
     django-framework/dependencies:
+        # pyproject.toml breaks the building. Remove it.
         override-build: |-
             rm -f pyproject.toml
             craftctl default
         python-packages:
+            # needed to serve static assets.
             - whitenoise
-
 
 services:
   django:
     override: merge
-    # nupdate from netbox.netbox.wsgi to netbox.wsgi
+    # Update from netbox.netbox.wsgi to netbox.wsgi
     command: /bin/python3 -m gunicorn -c /django/gunicorn.conf.py netbox.wsgi:application
