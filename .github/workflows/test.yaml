@@ -5,5 +5,7 @@ on:
 
 jobs:
   unit-tests:
-    uses: ./.github/workflows/test_run.yaml
+    uses: canonical/operator-workflows/.github/workflows/test.yaml@main
     secrets: inherit
+    with:
+      shellcheck-working-directory: "./charm"
