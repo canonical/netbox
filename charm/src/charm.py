@@ -26,10 +26,16 @@ class DjangoCharm(xiilib.django.Charm):
         super().__init__(*args)
 
     def gen_env(self) -> dict[str, str]:
+        """Return the environment variables for django scripts.
+
+        Returns:
+           dict with environment variables.
+        """
         env = super().gen_env()
         if self._ingress.url:
             env["DJANGO_BASE_URL"] = self._ingress.url
         return env
+
 
 if __name__ == "__main__":
     ops.main.main(DjangoCharm)
