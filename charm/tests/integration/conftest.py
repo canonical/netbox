@@ -121,9 +121,10 @@ async def netbox_app_fixture(
             "django_allowed_hosts": "*",
         },
     )
-    # If update_status comes before pebble ready, the unit gets to
-    # error state. Just do not fail in that case.
-    await model.wait_for_idle(apps=["netbox"], status="waiting", raise_on_error=False)
+    async with ops_test.fast_forward(fast_interval="3s"):
+        # If update_status comes before pebble ready, the unit gets to
+        # error state. Just do not fail in that case.
+        await model.wait_for_idle(apps=["netbox"], status="waiting", raise_on_error=False)
 
     await model.relate("netbox:postgresql", f"{postgresql_app_name}")
     await model.wait_for_idle(status="active")
