@@ -23,6 +23,7 @@ class DjangoCharm(xiilib.django.Charm):
             args: passthrough to CharmBase.
         """
         # pylint: disable=useless-parent-delegation
+        logger.warning("DJANGO CHARM INIT")
         super().__init__(*args)
 
     def gen_env(self) -> dict[str, str]:
