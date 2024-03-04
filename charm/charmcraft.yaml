@@ -35,22 +35,26 @@ requires:
 config:
   options:
     redis_hostname:
-      description: Redis hostname
+      description: |-
+        Redis hostname.
+        Will be replaced by the redis integration when 12 factor implements it.
       type: string
     redis_port:
-      description: Redis port
+      description: |-
+        Redis port.
+        Will be replaced by the redis integration when 12 factor implements it.
       type: int
       default: 6379
     redis_username:
-      description: Redis username
+      description: |-
+        Redis username.
+        Will be replaced by the redis integration when 12 factor implements it.
       type: string
       default: ''
     redis_password:
-      description: Redis password
-      type: string
-      default: ''
-    base_path:
-      description: Base path of the application
+      description: |-
+        Redis password.
+        Will be replaced by the redis integration when 12 factor implements it.
       type: string
       default: ''
 

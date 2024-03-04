@@ -25,6 +25,11 @@ class DjangoCharm(xiilib.django.Charm):
         # pylint: disable=useless-parent-delegation
         super().__init__(*args)
 
+    def gen_env(self) -> dict[str, str]:
+        env = super().gen_env()
+        if self._ingress.url:
+            env["DJANGO_BASE_URL"] = self._ingress.url
+        return env
 
 if __name__ == "__main__":
     ops.main.main(DjangoCharm)
