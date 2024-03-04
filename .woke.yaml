@@ -7,3 +7,5 @@ rules:
   - name: master
   # Ignore "grandfathered" used by SAML configuration.
   - name: grandfathered
+  # Ignore "whitelist" used by NetBox.
+  - name: whitelist
