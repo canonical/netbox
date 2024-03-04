@@ -2,7 +2,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Flask Charm entrypoint."""
+"""Django Charm entrypoint."""
 
 import logging
 import typing
