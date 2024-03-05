@@ -1,0 +1,67 @@
+# Copyright 2024 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+# This file configures Charmcraft.
+# See https://juju.is/docs/sdk/charmcraft-config for guidance.
+
+name: netbox
+
+type: charm
+
+bases:
+  - build-on:
+    - name: ubuntu
+      channel: "22.04"
+    run-on:
+    - name: ubuntu
+      channel: "22.04"
+
+summary: NetBox.
+
+description: |
+    NetBox is the go-to solution for modeling and documenting network
+    infrastructure for thousands of organizations worldwide. As a successor
+    to legacy IPAM and DCIM applications, NetBox provides a cohesive,
+    extensive, and accessible data model for all things networked.
+
+extensions:
+  - django-framework
+
+requires:
+  postgresql:
+    interface: postgresql_client
+    limit: 1
+
+config:
+  options:
+    redis_hostname:
+      description: |-
+        Redis hostname.
+        Will be replaced by the redis integration when 12 factor implements it.
+      type: string
+    redis_port:
+      description: |-
+        Redis port.
+        Will be replaced by the redis integration when 12 factor implements it.
+      type: int
+      default: 6379
+    redis_username:
+      description: |-
+        Redis username.
+        Will be replaced by the redis integration when 12 factor implements it.
+      type: string
+      default: ''
+    redis_password:
+      description: |-
+        Redis password.
+        Will be replaced by the redis integration when 12 factor implements it.
+      type: string
+      default: ''
+
+parts:
+  charm:
+    override-build: |-
+      rustup default stable
+      craftctl default
+    build-snaps:
+      - rustup

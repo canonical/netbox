@@ -1,0 +1,125 @@
+# Copyright 2024 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+name: netbox
+base: ubuntu@22.04
+version: '0.1'
+summary: Charmed NetBox project (https://github.com/canonical/netbox/)
+description: |
+    NetBox is the go-to solution for modeling and documenting network
+    infrastructure for thousands of organizations worldwide. As a successor
+    to legacy IPAM and DCIM applications, NetBox provides a cohesive,
+    extensive, and accessible data model for all things networked.
+license: Apache-2.0
+platforms:
+    amd64:
+
+# To ensure the django-framework extension works properly, your Django application
+# should have an `wsgi.py` file with an `application` object as the WSGI entrypoint.
+extensions:
+    - django-framework
+
+parts:
+    # NetBox project does not suit the 12 factor project yet.
+    # Until 12 factor django project supports the NetBox
+    # directory organisation, this changes are needed.
+    django-framework/install-app:
+        prime:
+            - "django/app/account"
+            - "django/app/circuits"
+            - "django/app/core"
+            - "django/app/dcim"
+            - "django/app/extras"
+            - "django/app/generate_secret_key.py"
+            - "django/app/ipam"
+            - "django/app/manage.py"
+            - "django/app/media"
+            - "django/app/netbox"
+            - "django/app/project-static"
+            - "django/app/reports"
+            - "django/app/scripts"
+            - "django/app/static"
+            - "django/app/templates"
+            - "django/app/tenancy"
+            - "django/app/translations"
+            - "django/app/users"
+            - "django/app/utilities"
+            - "django/app/virtualization"
+            - "django/app/vpn"
+            - "django/app/wireless"
+        stage:
+            - "django/app/account"
+            - "django/app/circuits"
+            - "django/app/core"
+            - "django/app/dcim"
+            - "django/app/extras"
+            - "django/app/generate_secret_key.py"
+            - "django/app/ipam"
+            - "django/app/manage.py"
+            - "django/app/media"
+            - "django/app/netbox"
+            - "django/app/project-static"
+            - "django/app/reports"
+            - "django/app/scripts"
+            - "django/app/static"
+            - "django/app/templates"
+            - "django/app/tenancy"
+            - "django/app/translations"
+            - "django/app/users"
+            - "django/app/utilities"
+            - "django/app/virtualization"
+            - "django/app/vpn"
+            - "django/app/wireless"
+        organize:
+            account: "django/app/account"
+            circuits: "django/app/circuits"
+            core: "django/app/core"
+            dcim: "django/app/dcim"
+            extras: "django/app/extras"
+            generate_secret_key.py: "django/app/generate_secret_key.py"
+            ipam: "django/app/ipam"
+            manage.py: "django/app/manage.py"
+            media: "django/app/media"
+            netbox: "django/app/netbox"
+            project-static: "django/app/project-static"
+            reports: "django/app/reports"
+            scripts: "django/app/scripts"
+            static: "django/app/static"
+            templates: "django/app/templates"
+            tenancy: "django/app/tenancy"
+            translations: "django/app/translations"
+            users: "django/app/users"
+            utilities: "django/app/utilities"
+            virtualization: "django/app/virtualization"
+            vpn: "django/app/vpn"
+            wireless: "django/app/wireless"
+        override-pull: |-
+            craftctl default
+            # We need to overwrite the settings and set the configuration.
+            # We could use a different DJANGO_SETTINGS_MODULE env var, but has to be
+            # used everywhere in that case.
+            [ ! -d netbox.orig ] && mv netbox netbox.orig && cp -R netbox.orig/* .
+            cp charm_configuration.py ./netbox/configuration.py
+            [ ! -f netbox/original_settings.py ] && mv netbox/settings.py netbox/original_settings.py
+            cp charm_settings.py ./netbox/settings.py
+        after:
+            - django-framework/dependencies
+        override-build: |-
+            # At this point, the original configuration does not work correctly.
+            # Some missing env vars like DJANGO_SECRET_KEY...
+            NETBOX_CONFIGURATION=netbox.configuration_testing PYTHONUSERBASE=${CRAFT_STAGE} python3 manage.py collectstatic --no-input
+            craftctl default
+    django-framework/dependencies:
+        # pyproject.toml breaks the building. Remove it.
+        override-build: |-
+            rm -f pyproject.toml
+            craftctl default
+        python-packages:
+            # needed to serve static assets.
+            - whitenoise
+
+services:
+  django:
+    override: merge
+    # Update from netbox.netbox.wsgi to netbox.wsgi
+    command: /bin/python3 -m gunicorn -c /django/gunicorn.conf.py netbox.wsgi:application
