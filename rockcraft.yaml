@@ -124,7 +124,7 @@ parts:
             # needed to serve static assets.
             - whitenoise
             # needed for saml
-            # TODO THE RECOMMENDED SOLUTION IS --nobinary. I don't know how to do it.
+            # FIXME the recommended solution --nobinary. Check how to do it.
             # https://github.com/SAML-Toolkits/python3-saml/issues/389
             - python3-saml
             - lxml==4.9.2

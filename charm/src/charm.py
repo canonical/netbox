@@ -44,20 +44,8 @@ class DjangoCharm(xiilib.django.Charm):
         env |= self.saml_env()
         return env
 
-    def _on_saml_data_available(self, _: SamlDataAvailableEvent) -> None:
-        """TODO. Needed to restart the workload."""
-        self.reconcile()
-
-    def _on_ingress_revoked(self, _) -> None:
-        """TODO. Needed to restart the workload."""
-        self.reconcile()
-
-    def _on_ingress_ready(self, _) -> None:
-        """TODO. Needed to restart the workload."""
-        self.reconcile()
-
     def saml_env(self):
-        """TODO."""
+        """Variables for SAML."""
         saml_data = {}
         if (relation := self.model.get_relation(self._SAML_RELATION_NAME)) is None:
             return saml_data
@@ -76,15 +64,33 @@ class DjangoCharm(xiilib.django.Charm):
         )
         x509certs = relation_data.get("x509certs", "")
 
+        # FIXME saml_env should not raise. We may have to check this
+        # in is_ready once the next Django 12 factor PR is merged,
+        # and maybe set the unit to blocked if this is wrong.
+        x509cert = x509certs.split(",")[0]
+
         saml_data.update(
             {
                 "SAML_ENTITY_ID": entity_id,
                 "SAML_METADATA_URL": metadata_url,
                 "SAML_SINGLE_SIGN_ON_SERVICE_REDIRECT_URL": single_sign_on_service_redirect_url,
-                "SAML_X509CERTS": x509certs.split(",")[0],  # Review this
+                "SAML_X509CERTS": x509cert,
             }
         )
         return saml_data
+
+
+    def _on_saml_data_available(self, _: SamlDataAvailableEvent) -> None:
+        """Needed to restart the workload."""
+        self.reconcile()
+
+    def _on_ingress_revoked(self, _) -> None:
+        """Needed to restart the workload."""
+        self.reconcile()
+
+    def _on_ingress_ready(self, _) -> None:
+        """Needed to restart the workload."""
+        self.reconcile()
 
     def _on_create_super_user_action(self, event: ops.ActionEvent):
         """TODO. This should go to Django 12 factor and generate the password randomly."""
