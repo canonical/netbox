@@ -15,6 +15,7 @@ from juju.application import Application
 from juju.model import Model
 from pytest import Config
 from pytest_operator.plugin import OpsTest
+from saml_test_helper import SamlK8sTestHelper
 
 from tests.conftest import NETBOX_IMAGE_PARAM
 
@@ -79,6 +80,12 @@ def postgresql_app_name_fixture() -> str:
 def netbox_app_name_fixture() -> str:
     """Return the name of the netbox application deployed for tests."""
     return "netbox"
+
+
+@pytest.fixture(scope="module", name="netbox_hostname")
+def netbox_hostname_fixture() -> str:
+    """Return the name of the netbox hostname used for tests."""
+    return "netbox.internal"
 
 
 @pytest.fixture(scope="module", name="redis_app_name")
@@ -215,3 +222,82 @@ async def redis_password_fixture(
     await password_action.wait()
     assert password_action.status == "completed"
     return password_action.results["redis-password"]
+
+
+@pytest_asyncio.fixture(scope="function", name="netbox_nginx_integration")
+async def netbox_nginx_integration_fixture(
+    model: Model,
+    nginx_app: Application,
+    netbox_app: Application,
+    netbox_hostname: str,
+):
+    """Integrate Netbox and Nginx for ingress integration."""
+    await nginx_app.set_config({"service-hostname": netbox_hostname, "path-routes": "/"})
+    await model.wait_for_idle()
+    relation = await model.add_relation(f"{netbox_app.name}", f"{nginx_app.name}")
+    await model.wait_for_idle(
+        apps=[netbox_app.name, nginx_app.name], idle_period=30, status="active"
+    )
+    yield relation
+    await netbox_app.destroy_relation("ingress", f"{nginx_app.name}:ingress")
+
+
+@pytest_asyncio.fixture(scope="module", name="saml_helper")
+async def saml_helper_fixture(
+    model: Model,
+) -> SamlK8sTestHelper:
+    """Fixture for SamlHelper."""
+    saml_helper = SamlK8sTestHelper.deploy_saml_idp(model.name)
+    return saml_helper
+
+
+@pytest_asyncio.fixture(scope="function", name="netbox_saml_integration")
+async def netbox_saml_integration_fixture(
+    model: Model,
+    saml_app: Application,
+    netbox_app: Application,
+    netbox_hostname: str,
+    saml_helper: SamlK8sTestHelper,
+):
+    """Integrate Netbox and SAML for saml integration."""
+    await netbox_app.set_config(
+        {
+            "saml_sp_entity_id": f"https://{netbox_hostname}",
+            # The saml Name for FriendlyName "uid"
+            "saml_username": "urn:oid:0.9.2342.19200300.100.1.1",
+        }
+    )
+    saml_helper.prepare_pod(model.name, f"{saml_app.name}-0")
+    saml_helper.prepare_pod(model.name, f"{netbox_app.name}-0")
+    await saml_app.set_config(
+        {
+            "entity_id": f"https://{saml_helper.SAML_HOST}/metadata",
+            "metadata_url": f"https://{saml_helper.SAML_HOST}/metadata",
+        }
+    )
+    await model.wait_for_idle(idle_period=30)
+    relation = await model.add_relation(saml_app.name, netbox_app.name)
+    await model.wait_for_idle(
+        apps=[saml_app.name, netbox_app.name],
+        idle_period=30,
+        status="active",
+    )
+
+    # For the saml_helper, a SAML XML metadata for the service is needed.
+    # There are instructions to generate it in:
+    # https://python-social-auth.readthedocs.io/en/latest/backends/saml.html#basic-usage.
+    # This one is instead a minimalistic one that works for the test.
+    metadata_xml = """
+    <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" cacheDuration="P10D"
+                         entityID="https://netbox.internal">
+      <md:SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol"
+                          AuthnRequestsSigned="false" WantAssertionsSigned="true">
+        <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+                                     Location="https://netbox.internal/oauth/complete/saml/"
+                                     index="1"/>
+      </md:SPSSODescriptor>
+    </md:EntityDescriptor>
+    """
+    saml_helper.register_service_provider(name=netbox_hostname, metadata=metadata_xml)
+    yield relation
+    await netbox_app.destroy_relation("saml", f"{saml_app.name}:saml")
