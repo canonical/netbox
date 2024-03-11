@@ -27,16 +27,6 @@ description: |
 extensions:
   - django-framework
 
-actions:
-  create-super-user:
-    description: Create a super user
-    username:
-      type: string
-    password:
-      type: string
-    email:
-      type: string
-
 requires:
   postgresql:
     interface: postgresql_client
