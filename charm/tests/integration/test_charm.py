@@ -45,9 +45,10 @@ async def test_saml_netbox(
     netbox_hostname: str,
 ) -> None:
     """
-    arrange: TODO
-    act: TODO
-    assert: TODO
+    arrange: Deploy NetBox with nginx and saml. Check that the
+        user ubuntu is not logged in.
+    act: Log in with saml in NetBox.
+    assert: Check that the user ubuntu is logged in.
     """
     res = requests.get(
         "https://127.0.0.1/",
@@ -57,10 +58,12 @@ async def test_saml_netbox(
     )
     assert res.status_code == 200
     assert "<title>Home | NetBox</title>" in res.text
+    # The user is not logged in.
     assert '<span id="navbar_user">ubuntu</span>' not in res.text
 
     session = requests.session()
 
+    # Act part. Log in with SAML.
     redirect_url = "https://127.0.0.1/oauth/login/saml/?next=%2F&idp=saml"
     res = session.get(
         redirect_url,
@@ -74,6 +77,7 @@ async def test_saml_netbox(
     saml_response = saml_helper.redirect_sso_login(redirect_url)
     assert f"https://{netbox_hostname}" in saml_response.url
 
+    # Assert part. Check that the user is logged in.
     url = saml_response.url.replace(f"https://{netbox_hostname}", "https://127.0.0.1")
     logged_in_page = session.post(
         url, data=saml_response.data, headers={"Host": netbox_hostname}, timeout=10, verify=False
