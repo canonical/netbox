@@ -60,11 +60,12 @@ class DjangoCharm(xiilib.django.Charm):
         if (relation := self.model.get_relation(self._SAML_RELATION_NAME)) is None:
             return saml_data
 
-        relation_data = (
-            {key: value for key, value in relation.data[relation.app].items() if key != "data"}
-            if relation.app
-            else {}
-        )
+        if not relation.app:
+            return saml_data
+
+        relation_data = {
+            key: value for key, value in relation.data[relation.app].items() if key != "data"
+        }
 
         # Fields defined in :
         # https://github.com/canonical/charm-relation-interfaces/tree/main/interfaces/saml/v0
