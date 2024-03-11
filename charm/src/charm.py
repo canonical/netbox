@@ -27,7 +27,6 @@ class DjangoCharm(xiilib.django.Charm):
             args: passthrough to CharmBase.
         """
         super().__init__(*args)
-        self.framework.observe(self.on.create_super_user_action, self._on_create_super_user_action)
         self.saml = SamlRequires(self)
         self.framework.observe(self.saml.on.saml_data_available, self._on_saml_data_available)
         self.framework.observe(self._ingress.on.ready, self._on_ingress_ready)
