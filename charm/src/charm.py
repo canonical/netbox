@@ -96,15 +96,15 @@ class DjangoCharm(xiilib.django.Charm):
         return saml_data
 
     def _on_saml_data_available(self, _: SamlDataAvailableEvent) -> None:
-        """Needed to restart the workload."""
+        """Event for Saml data available. Needed to restart the workload."""
         self.reconcile()
 
     def _on_ingress_revoked(self, _: ops.HookEvent) -> None:
-        """Needed to restart the workload."""
+        """Event for ingress revoked. Needed to restart the workload."""
         self.reconcile()
 
     def _on_ingress_ready(self, _: ops.HookEvent) -> None:
-        """Needed to restart the workload."""
+        """Event for ingress ready. Needed to restart the workload."""
         self.reconcile()
 
 
