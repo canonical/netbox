@@ -105,34 +105,5 @@ class DjangoCharm(xiilib.django.Charm):
         """Needed to restart the workload."""
         self.reconcile()
 
-    def _on_create_super_user_action(self, event: ops.ActionEvent) -> None:
-        """TODO. This should go to Django 12 factor and generate the password randomly.
-
-        Args:
-            event: the action event.
-        """
-        container = self.unit.get_container(self._CONTAINER_NAME)
-        if not container.can_connect():
-            event.fail("django-app container is not ready")
-        try:
-            action_environment = {
-                "DJANGO_SUPERUSER_PASSWORD": str(event.params["password"]),
-                "DJANGO_SUPERUSER_USERNAME": event.params["username"],
-                "DJANGO_SUPERUSER_EMAIL": event.params["email"],
-            }
-            environment = self.gen_env()
-            logger.info("ENV %s", (action_environment | environment))
-            output, _ = container.exec(
-                ["python3", "manage.py", "createsuperuser", "--noinput"],
-                environment=(action_environment | environment),
-                combine_stderr=True,
-                working_dir=str(self._BASE_DIR / "app"),
-                user="_daemon_",
-            ).wait_output()
-            event.set_results({"output": output})
-        except ops.pebble.ExecError as e:
-            event.fail(str(e.stdout))
-
-
 if __name__ == "__main__":
     ops.main.main(DjangoCharm)
