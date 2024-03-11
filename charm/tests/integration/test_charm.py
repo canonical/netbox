@@ -2,7 +2,6 @@
 # See LICENSE file for licensing details.
 
 """Integration tests NetBox charm."""
-import logging
 from typing import Callable, Coroutine, List
 
 import pytest
@@ -10,8 +9,6 @@ import requests
 from juju.application import Application
 from juju.model import Model
 from saml_test_helper import SamlK8sTestHelper
-
-logger = logging.getLogger(__name__)
 
 
 @pytest.mark.usefixtures("netbox_app")
@@ -65,11 +62,8 @@ async def test_saml_netbox(
 
     await nginx_app.set_config({"service-hostname": hostname, "path-routes": "/"})
 
-    logger.info("wait for apps to settle")
     await model.wait_for_idle()
-    logger.info("add nginx and netbox integration")
     await model.add_relation(f"{netbox_app.name}", f"{nginx_app.name}")
-    logger.info("wait for them to settle")
     await model.wait_for_idle(
         apps=[netbox_app.name, nginx_app.name], idle_period=30, status="active"
     )
@@ -96,15 +90,11 @@ async def test_saml_netbox(
         }
     )
     await model.wait_for_idle(idle_period=30)
-    logger.info("add relation saml, netbox")
     await model.add_relation(saml_app.name, netbox_app.name)
-    logger.info("waiting for idle")
     await model.wait_for_idle(
         idle_period=30,
         status="active",
     )
-
-    logger.info("cool, lets add the metadata to the idp")
 
     # For the saml_helper, a SAML XML metadata for the service is needed.
     # There are instructions to generate it in:
@@ -123,7 +113,6 @@ async def test_saml_netbox(
     """
     saml_helper.register_service_provider(name=hostname, metadata=metadata_xml)
 
-    logger.info("let;s redirect!!")
     session = requests.session()
 
     redirect_url = "https://127.0.0.1/oauth/login/saml/?next=%2F&idp=saml"
