@@ -57,10 +57,62 @@ async def get_unit_ips_fixture(
     return get_unit_ips
 
 
+@pytest.fixture(scope="module", name="saml_app_name")
+def saml_app_name_fixture() -> str:
+    """Return the name of the saml-integrator application deployed for tests."""
+    return "saml-integrator"
+
+
+@pytest.fixture(scope="module", name="nginx_app_name")
+def nginx_app_name_fixture() -> str:
+    """Return the name of the nginx-ingress-integrator application deployed for tests."""
+    return "nginx-ingress-integrator"
+
+
 @pytest.fixture(scope="module", name="postgresql_app_name")
 def postgresql_app_name_fixture() -> str:
     """Return the name of the postgresql application deployed for tests."""
     return "postgresql-k8s"
+
+
+@pytest.fixture(scope="module", name="netbox_app_name")
+def netbox_app_name_fixture() -> str:
+    """Return the name of the netbox application deployed for tests."""
+    return "netbox"
+
+
+@pytest.fixture(scope="module", name="redis_app_name")
+def redis_app_name_fixture() -> str:
+    """Return the name of the redis application deployed for tests."""
+    return "redis-k8s"
+
+
+@pytest_asyncio.fixture(scope="module", name="nginx_app")
+async def nginx_app_fixture(
+    ops_test: OpsTest,
+    nginx_app_name: str,
+    model: Model,
+    pytestconfig: Config,
+) -> Application:
+    """Deploy nginx."""
+    async with ops_test.fast_forward():
+        app = await model.deploy(nginx_app_name, channel="latest/edge", revision=88, trust=True)
+        await model.wait_for_idle()
+    return app
+
+
+@pytest_asyncio.fixture(scope="module", name="saml_app")
+async def saml_app_fixture(
+    ops_test: OpsTest,
+    saml_app_name: str,
+    model: Model,
+    pytestconfig: Config,
+) -> Application:
+    """Deploy saml."""
+    async with ops_test.fast_forward():
+        app = await model.deploy(saml_app_name, channel="latest/edge")
+        await model.wait_for_idle()
+    return app
 
 
 @pytest_asyncio.fixture(scope="module", name="postgresql_app")
@@ -68,17 +120,18 @@ async def postgresql_app_fixture(
     ops_test: OpsTest,
     postgresql_app_name: str,
     model: Model,
+    pytestconfig: Config,
 ) -> Application:
     """Deploy postgresql."""
     async with ops_test.fast_forward():
         app = await model.deploy(postgresql_app_name, channel="14/stable", trust=True)
-        await model.wait_for_idle(status="active")
+        await model.wait_for_idle(apps=[postgresql_app_name], status="active")
     return app
 
 
 @pytest_asyncio.fixture(scope="module", name="netbox_app_image")
 def netbox_app_image_fixture(pytestconfig: Config) -> str:
-    """Get value from parameter django-app--image."""
+    """Get value from parameter netbox-image."""
     netbox_app_image = pytestconfig.getoption(NETBOX_IMAGE_PARAM)
     assert netbox_app_image, f"{NETBOX_IMAGE_PARAM} must be set"
     return netbox_app_image
@@ -101,16 +154,19 @@ async def netbox_app_fixture(
     model: Model,
     netbox_charm: str,
     netbox_app_image: str,
+    netbox_app_name: str,
     postgresql_app_name: str,
     get_unit_ips,
+    redis_app_name: str,
     redis_password: str,
     postgresql_app: Application,
+    pytestconfig: Config,
 ) -> Application:
     """Deploy netbox app."""
     resources = {
         "django-app-image": netbox_app_image,
     }
-    redis_ips = await get_unit_ips("redis-k8s")
+    redis_ips = await get_unit_ips(redis_app_name)
     app = await model.deploy(
         f"./{netbox_charm}",
         resources=resources,
@@ -123,18 +179,22 @@ async def netbox_app_fixture(
     )
     # If update_status comes before pebble ready, the unit gets to
     # error state. Just do not fail in that case.
-    await model.wait_for_idle(apps=["netbox"], status="waiting", raise_on_error=False)
+    await model.wait_for_idle(apps=[netbox_app_name], status="waiting", raise_on_error=False)
 
-    await model.relate("netbox:postgresql", f"{postgresql_app_name}")
-    await model.wait_for_idle(status="active")
+    await model.relate(f"{netbox_app_name}:postgresql", f"{postgresql_app_name}")
+    await model.wait_for_idle(apps=[netbox_app_name, postgresql_app_name], status="active")
     return app
 
 
 @pytest_asyncio.fixture(scope="module", name="redis_app")
-async def redis_app_fixture(model: Model) -> Application:
+async def redis_app_fixture(
+        redis_app_name: str,
+        model: Model,
+        pytestconfig: Config,
+) -> Application:
     """Deploy redis-k8s."""
-    app = await model.deploy("redis-k8s", channel="edge")
-    await model.wait_for_idle(apps=["redis-k8s"], status="active")
+    app = await model.deploy(redis_app_name, channel="edge")
+    await model.wait_for_idle(apps=[redis_app_name], status="active")
     return app
 
 
@@ -142,10 +202,11 @@ async def redis_app_fixture(model: Model) -> Application:
 async def redis_password_fixture(
     model: Model,
     redis_app: Application,
+    redis_app_name: str,
 ) -> str:
     """Get redis password from action."""
     password_action: Action = (
-        await model.applications["redis-k8s"]
+        await model.applications[redis_app_name]
         .units[0]
         .run_action(  # type: ignore
             "get-initial-admin-password",

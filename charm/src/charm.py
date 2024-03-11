@@ -6,6 +6,7 @@
 
 import logging
 import typing
+import urllib.parse
 
 import ops
 import xiilib.django
@@ -41,6 +42,12 @@ class DjangoCharm(xiilib.django.Charm):
         env = super().gen_env()
         if self._ingress.url:
             env["DJANGO_BASE_URL"] = self._ingress.url
+            # In my tests this returns http instead of https. Not sure
+            # if this is correct.
+            if "DJANGO_SAML_SP_ENTITY_ID" not in env:
+                parsed_ingress_url = urllib.parse.urlparse(self._ingress.url)
+                parsed_ingress_url = parsed_ingress_url._replace(path='')
+                env["DJANGO_SAML_SP_ENTITY_ID"] = parsed_ingress_url.geturl()
         env |= self.saml_env()
         return env
 
