@@ -104,5 +104,6 @@ class DjangoCharm(xiilib.django.Charm):
         """Needed to restart the workload."""
         self.reconcile()
 
+
 if __name__ == "__main__":
     ops.main.main(DjangoCharm)
