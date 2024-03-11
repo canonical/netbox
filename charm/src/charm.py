@@ -42,6 +42,7 @@ class DjangoCharm(xiilib.django.Charm):
         if self._ingress.url:
             env["DJANGO_BASE_URL"] = self._ingress.url
             # This may be problematic, as it could return http instead of https.
+            # In that case, the config option saml_sp_entity_id should be set.
             if "DJANGO_SAML_SP_ENTITY_ID" not in env:
                 parsed_ingress_url = urllib.parse.urlparse(self._ingress.url)
                 parsed_ingress_url = parsed_ingress_url._replace(path="")
@@ -74,8 +75,10 @@ class DjangoCharm(xiilib.django.Charm):
         )
         x509certs = relation_data.get("x509certs", "")
 
-        # saml_env should not raise. We may have to check this in is_ready once the next Django 12
-        # factor PR is merged, and maybe set the unit to blocked if this is wrong.
+        # saml_env should not raise. Pending to update this code once
+        # the next Django 12 factpr PR factor PR is merged, and maybe
+        # set the unit to blocked if for any reason the saml
+        # integration data is wrong.
         if x509certs:
             x509cert = x509certs.split(",")[0]
         else:
