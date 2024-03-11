@@ -123,11 +123,13 @@ parts:
         python-packages:
             # needed to serve static assets.
             - whitenoise
-            # needed for saml
-            # FIXME the recommended solution --nobinary. Check how to do it.
-            # https://github.com/SAML-Toolkits/python3-saml/issues/389
+            # Needed for SAML
             - python3-saml
-            - lxml==4.9.2
+            - lxml
+            # saml library crashes (SEGFAULT) with lxml installed from binary.
+            # https://github.com/SAML-Toolkits/python3-saml/issues/389
+            # Using this trick to not install it from binary and compile it instead.
+            - "--no-binary=lxml"
         stage-packages:
             # needed for saml
             - libxmlsec1
