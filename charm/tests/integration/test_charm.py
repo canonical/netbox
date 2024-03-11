@@ -2,23 +2,21 @@
 # See LICENSE file for licensing details.
 
 """Integration tests NetBox charm."""
-from typing import Callable, Coroutine, List
 import logging
+from typing import Callable, Coroutine, List
 
 import pytest
 import requests
-
 from juju.application import Application
 from juju.model import Model
-
 from saml_test_helper import SamlK8sTestHelper
 
 logger = logging.getLogger(__name__)
 
+
 @pytest.mark.usefixtures("netbox_app")
 async def test_netbox_health(
-    netbox_app_name: str,
-    get_unit_ips: Callable[[str], Coroutine[None, None, List[str]]]
+    netbox_app_name: str, get_unit_ips: Callable[[str], Coroutine[None, None, List[str]]]
 ) -> None:
     """
     arrange: Build and deploy the NetBox charm.
@@ -52,7 +50,7 @@ async def test_saml_netbox(
     saml_app: Application,
 ) -> None:
     """
-    arrange: TODO 
+    arrange: TODO
     act: TODO
     assert: TODO
     """
@@ -65,22 +63,22 @@ async def test_saml_netbox(
         }
     )
 
-    await nginx_app.set_config(
-        {
-            "service-hostname": hostname,
-            "path-routes": "/"
-         }
-    )
+    await nginx_app.set_config({"service-hostname": hostname, "path-routes": "/"})
 
     logger.info("wait for apps to settle")
     await model.wait_for_idle()
     logger.info("add nginx and netbox integration")
     await model.add_relation(f"{netbox_app.name}", f"{nginx_app.name}")
     logger.info("wait for them to settle")
-    await model.wait_for_idle(apps=[netbox_app.name, nginx_app.name], idle_period=30, status='active')
+    await model.wait_for_idle(
+        apps=[netbox_app.name, nginx_app.name], idle_period=30, status="active"
+    )
 
     res = requests.get(
-        "https://127.0.0.1/", headers={"Host": hostname}, timeout=5, verify=False
+        "https://127.0.0.1/",
+        headers={"Host": hostname},
+        verify=False,
+        timeout=5,  # nosec
     )
     assert res.status_code == 200
     assert b"<title>Home | NetBox</title>" in res.content
@@ -113,9 +111,13 @@ async def test_saml_netbox(
     # https://python-social-auth.readthedocs.io/en/latest/backends/saml.html#basic-usage.
     # This one is instead a minimalistic one that works for the test.
     metadata_xml = """
-    <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" cacheDuration="P10D" entityID="https://netbox.internal">
-      <md:SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol" AuthnRequestsSigned="false" WantAssertionsSigned="true">
-        <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://netbox.internal/oauth/complete/saml/" index="1"/>
+    <md:EntityDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" cacheDuration="P10D"
+                         entityID="https://netbox.internal">
+      <md:SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:2.0:protocol"
+                          AuthnRequestsSigned="false" WantAssertionsSigned="true">
+        <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST"
+                                     Location="https://netbox.internal/oauth/complete/saml/"
+                                     index="1"/>
       </md:SPSSODescriptor>
     </md:EntityDescriptor>
     """
@@ -123,21 +125,25 @@ async def test_saml_netbox(
 
     logger.info("let;s redirect!!")
     session = requests.session()
-    
+
     redirect_url = "https://127.0.0.1/oauth/login/saml/?next=%2F&idp=saml"
     res = session.get(
-        redirect_url, headers={"Host": hostname}, timeout=5, verify=False, allow_redirects=False,
+        redirect_url,
+        headers={"Host": hostname},
+        timeout=5,
+        verify=False,
+        allow_redirects=False,
     )
     assert res.status_code == 302
     redirect_url = res.headers["Location"]
     saml_response = saml_helper.redirect_sso_login(redirect_url)
     assert f"https://{hostname}" in saml_response.url
 
-    url = saml_response.url.replace(
-        f"https://{hostname}", "https://127.0.0.1"
+    url = saml_response.url.replace(f"https://{hostname}", "https://127.0.0.1")
+    logged_in_page = session.post(
+        url, data=saml_response.data, headers={"Host": hostname}, timeout=10, verify=False
     )
-    logged_in_page = session.post(url, data=saml_response.data, headers={"Host": hostname}, timeout=10, verify=False)
     assert logged_in_page.status_code == 200
     assert "<title>Home | NetBox</title>" in logged_in_page.text
-    # not sure it is neccessary, but clearly, this means the user is logged in
-    assert '<span id="navbar_user">ubuntu</span>' in  logged_in_page.text
+    # The user is logged in.
+    assert '<span id="navbar_user">ubuntu</span>' in logged_in_page.text

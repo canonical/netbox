@@ -188,9 +188,9 @@ async def netbox_app_fixture(
 
 @pytest_asyncio.fixture(scope="module", name="redis_app")
 async def redis_app_fixture(
-        redis_app_name: str,
-        model: Model,
-        pytestconfig: Config,
+    redis_app_name: str,
+    model: Model,
+    pytestconfig: Config,
 ) -> Application:
     """Deploy redis-k8s."""
     app = await model.deploy(redis_app_name, channel="edge")

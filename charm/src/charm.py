@@ -42,18 +42,21 @@ class DjangoCharm(xiilib.django.Charm):
         env = super().gen_env()
         if self._ingress.url:
             env["DJANGO_BASE_URL"] = self._ingress.url
-            # In my tests this returns http instead of https. Not sure
-            # if this is correct.
+            # This may be problematic, as it could return http instead of https.
             if "DJANGO_SAML_SP_ENTITY_ID" not in env:
                 parsed_ingress_url = urllib.parse.urlparse(self._ingress.url)
-                parsed_ingress_url = parsed_ingress_url._replace(path='')
+                parsed_ingress_url = parsed_ingress_url._replace(path="")
                 env["DJANGO_SAML_SP_ENTITY_ID"] = parsed_ingress_url.geturl()
         env |= self.saml_env()
         return env
 
-    def saml_env(self):
-        """Variables for SAML."""
-        saml_data = {}
+    def saml_env(self) -> dict[str, str]:
+        """Environment variables for SAML.
+
+        Returns:
+           dict with environment variables.
+        """
+        saml_data: dict[str, str] = {}
         if (relation := self.model.get_relation(self._SAML_RELATION_NAME)) is None:
             return saml_data
 
@@ -63,7 +66,8 @@ class DjangoCharm(xiilib.django.Charm):
             else {}
         )
 
-        # Fields following https://github.com/canonical/charm-relation-interfaces/tree/main/interfaces/saml/v0
+        # Fields defined in :
+        # https://github.com/canonical/charm-relation-interfaces/tree/main/interfaces/saml/v0
         entity_id = relation_data.get("entity_id", "")
         metadata_url = relation_data.get("metadata_url", "")
         single_sign_on_service_redirect_url = relation_data.get(
@@ -71,10 +75,13 @@ class DjangoCharm(xiilib.django.Charm):
         )
         x509certs = relation_data.get("x509certs", "")
 
-        # FIXME saml_env should not raise. We may have to check this
-        # in is_ready once the next Django 12 factor PR is merged,
-        # and maybe set the unit to blocked if this is wrong.
-        x509cert = x509certs.split(",")[0]
+        # saml_env should not raise. We may have to check this in is_ready once the next Django 12
+        # factor PR is merged, and maybe set the unit to blocked if this is wrong.
+        if x509certs:
+            x509cert = x509certs.split(",")[0]
+        else:
+            logger.error("Empty x509certs in saml")
+            x509cert = ""
 
         saml_data.update(
             {
@@ -86,21 +93,24 @@ class DjangoCharm(xiilib.django.Charm):
         )
         return saml_data
 
-
     def _on_saml_data_available(self, _: SamlDataAvailableEvent) -> None:
         """Needed to restart the workload."""
         self.reconcile()
 
-    def _on_ingress_revoked(self, _) -> None:
+    def _on_ingress_revoked(self, _: ops.HookEvent) -> None:
         """Needed to restart the workload."""
         self.reconcile()
 
-    def _on_ingress_ready(self, _) -> None:
+    def _on_ingress_ready(self, _: ops.HookEvent) -> None:
         """Needed to restart the workload."""
         self.reconcile()
 
-    def _on_create_super_user_action(self, event: ops.ActionEvent):
-        """TODO. This should go to Django 12 factor and generate the password randomly."""
+    def _on_create_super_user_action(self, event: ops.ActionEvent) -> None:
+        """TODO. This should go to Django 12 factor and generate the password randomly.
+
+        Args:
+            event: the action event.
+        """
         container = self.unit.get_container(self._CONTAINER_NAME)
         if not container.can_connect():
             event.fail("django-app container is not ready")
@@ -121,7 +131,7 @@ class DjangoCharm(xiilib.django.Charm):
             ).wait_output()
             event.set_results({"output": output})
         except ops.pebble.ExecError as e:
-            event.fail(e.stdout)
+            event.fail(str(e.stdout))
 
 
 if __name__ == "__main__":

@@ -4,5 +4,5 @@
 """Unit tests for NetBox charm."""
 
 
-async def test_empty() -> None:
+def test_empty() -> None:
     """Empty test."""
