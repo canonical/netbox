@@ -85,16 +85,12 @@ class DjangoCharm(xiilib.django.Charm):
             logger.error("Empty x509certs in saml")
             x509cert = ""
 
-        saml_data: dict[str, str] = {}
-        saml_data.update(
-            {
-                "SAML_ENTITY_ID": entity_id,
-                "SAML_METADATA_URL": metadata_url,
-                "SAML_SINGLE_SIGN_ON_SERVICE_REDIRECT_URL": single_sign_on_service_redirect_url,
-                "SAML_X509CERTS": x509cert,
-            }
-        )
-        return saml_data
+        return {
+            "SAML_ENTITY_ID": entity_id,
+            "SAML_METADATA_URL": metadata_url,
+            "SAML_SINGLE_SIGN_ON_SERVICE_REDIRECT_URL": single_sign_on_service_redirect_url,
+            "SAML_X509CERTS": x509cert,
+        }
 
     def _on_saml_data_available(self, _: SamlDataAvailableEvent) -> None:
         """Handle event for Saml data available."""
