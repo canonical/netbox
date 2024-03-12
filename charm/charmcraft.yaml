@@ -63,7 +63,7 @@ config:
       default: ''
     saml_sp_entity_id:
       description: |-
-        SAML sp entity id
+        SAML SP entity id.
       type: string
     saml_username:
       description: |-
