@@ -77,9 +77,9 @@ class DjangoCharm(xiilib.django.Charm):
         x509certs = relation_data.get("x509certs", "")
 
         # saml_env should not raise. Pending to update this code once
-        # the next Django 12 factpr PR factor PR is merged, and maybe
-        # set the unit to blocked if for any reason the saml
-        # integration data is wrong.
+        # the next Django 12 factor PR is merged, and maybe set the
+        # unit to blocked if for any reason the saml integration data
+        # is wrong.
         if x509certs:
             x509cert = x509certs.split(",")[0]
         else:
