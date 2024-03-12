@@ -31,6 +31,10 @@ requires:
   postgresql:
     interface: postgresql_client
     limit: 1
+  saml:
+    interface: saml
+    limit: 1
+    optional: true
 
 config:
   options:
@@ -57,6 +61,20 @@ config:
         Will be replaced by the redis integration when 12 factor implements it.
       type: string
       default: ''
+    saml_sp_entity_id:
+      description: |-
+        SAML SP entity id.
+      type: string
+    saml_username:
+      description: |-
+        SAML attribute used for both the social uid and the username.
+        NameID can be used setting this config to 'name_id'.
+      type: string
+      default: 'name_id'
+    saml_email:
+      description: |-
+        SAML attribute used for the email.
+      type: string
 
 parts:
   charm:
