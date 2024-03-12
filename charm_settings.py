@@ -15,3 +15,4 @@ parsed_base_url = urllib.parse.urlparse(base_url)
 WHITENOISE_STATIC_PREFIX=STATIC_URL
 STATIC_URL = f"{parsed_base_url.path}/{STATIC_URL}"
 FORCE_SCRIPT_NAME=f"{parsed_base_url.path}"
+MEDIA_URL = f"{parsed_base_url.path}/{MEDIA_URL}"

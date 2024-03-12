@@ -239,17 +239,6 @@ PLUGINS = []
 #     }
 # }
 
-# Remote authentication support
-REMOTE_AUTH_ENABLED = False
-REMOTE_AUTH_BACKEND = 'netbox.authentication.RemoteUserBackend'
-REMOTE_AUTH_HEADER = 'HTTP_REMOTE_USER'
-REMOTE_AUTH_USER_FIRST_NAME = 'HTTP_REMOTE_USER_FIRST_NAME'
-REMOTE_AUTH_USER_LAST_NAME = 'HTTP_REMOTE_USER_LAST_NAME'
-REMOTE_AUTH_USER_EMAIL = 'HTTP_REMOTE_USER_EMAIL'
-REMOTE_AUTH_AUTO_CREATE_USER = True
-REMOTE_AUTH_DEFAULT_GROUPS = []
-REMOTE_AUTH_DEFAULT_PERMISSIONS = {}
-
 # This repository is used to check whether there is a new release of NetBox available. Set to None to disable the
 # version check or use the URL below to check for release in the official NetBox repository.
 RELEASE_CHECK_URL = None
@@ -295,3 +284,49 @@ TIME_FORMAT = 'g:i a'
 SHORT_TIME_FORMAT = 'H:i:s'
 DATETIME_FORMAT = 'N j, Y g:i a'
 SHORT_DATETIME_FORMAT = 'Y-m-d H:i'
+
+# Remote authentication support
+REMOTE_AUTH_ENABLED = False
+if "SAML_ENTITY_ID" in os.environ:
+    REMOTE_AUTH_ENABLED = True
+    REMOTE_AUTH_BACKEND = 'social_core.backends.saml.SAMLAuth'
+
+    SOCIAL_AUTH_SAML_SP_ENTITY_ID = os.environ.get("DJANGO_SAML_SP_ENTITY_ID")
+    SOCIAL_AUTH_SAML_ENABLED_IDPS = {
+        "saml": {
+            "entity_id": os.environ.get("SAML_ENTITY_ID"),
+            "url": os.environ.get("SAML_SINGLE_SIGN_ON_SERVICE_REDIRECT_URL"),
+            "x509cert": os.environ.get("SAML_X509CERTS"),
+            "attr_user_permanent_id": os.environ.get("DJANGO_SAML_USERNAME"),
+            "attr_username": os.environ.get("DJANGO_SAML_USERNAME"),
+        }
+    }
+    if os.environ.get("DJANGO_SAML_EMAIL"):
+        SOCIAL_AUTH_SAML_ENABLED_IDPS["saml"]["attr_email"] = os.environ["DJANGO_SAML_EMAIL"]
+
+    # The next variables are mandatory. They are set to an arbitrary value so SAML does not fail.
+    SOCIAL_AUTH_SAML_ORG_INFO = {
+        "en-US": {
+            "name": "example",
+            "displayname": "Example Inc.",
+            "url": "http://netbox.example.com"
+        }
+    }
+    SOCIAL_AUTH_SAML_TECHNICAL_CONTACT = {
+        "givenName": "Tech Gal",
+        "emailAddress": "technical@example.com"
+    }
+    SOCIAL_AUTH_SAML_SUPPORT_CONTACT = {
+        "givenName": "Support Guy",
+        "emailAddress": "support@example.com"
+    }
+
+    # SAML SP certificates (AuthnRequestsSigned) not implemented for the charm.
+    # It is necessary to have SOCIAL_AUTH_SAML_SP_PUBLIC_CERT and_AUTH_SAML_SP_PRIVATE_KEY
+    # defined as strings, otherwise the saml library will fail.
+    SOCIAL_AUTH_SAML_SP_PUBLIC_CERT = ""
+    SOCIAL_AUTH_SAML_SP_PRIVATE_KEY = ""
+
+REMOTE_AUTH_AUTO_CREATE_USER = True
+REMOTE_AUTH_DEFAULT_GROUPS = []
+REMOTE_AUTH_DEFAULT_PERMISSIONS = {}

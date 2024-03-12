@@ -109,14 +109,31 @@ parts:
             # Some missing env vars like DJANGO_SECRET_KEY...
             NETBOX_CONFIGURATION=netbox.configuration_testing PYTHONUSERBASE=${CRAFT_STAGE} python3 manage.py collectstatic --no-input
             craftctl default
+        override-prime: |-
+            craftctl default
+            chown -R 584792 django/app/media
     django-framework/dependencies:
         # pyproject.toml breaks the building. Remove it.
         override-build: |-
             rm -f pyproject.toml
             craftctl default
+        build-packages:
+            - pkg-config
+            - libxmlsec1-dev
         python-packages:
             # needed to serve static assets.
             - whitenoise
+            # Needed for SAML
+            - python3-saml
+            - lxml
+            # saml library crashes (SEGFAULT) with lxml installed from binary.
+            # https://github.com/SAML-Toolkits/python3-saml/issues/389
+            # Using this trick to not install it from binary and compile it instead.
+            - "--no-binary=lxml"
+        stage-packages:
+            # needed for saml
+            - libxmlsec1
+            - libxmlsec1-openssl
 
 services:
   django:
