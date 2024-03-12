@@ -67,13 +67,13 @@ config:
       type: string
     saml_username:
       description: |-
-        Saml attribute used for both the social uid and the username.
+        SAML attribute used for both the social uid and the username.
         NameID can be used setting this config to 'name_id'.
       type: string
       default: 'name_id'
     saml_email:
       description: |-
-        Saml attribute used for the email.
+        SAML attribute used for the email.
       type: string
 
 parts:
