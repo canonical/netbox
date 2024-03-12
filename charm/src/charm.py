@@ -56,12 +56,11 @@ class DjangoCharm(xiilib.django.Charm):
         Returns:
            dict with environment variables.
         """
-        saml_data: dict[str, str] = {}
         if (relation := self.model.get_relation(self._SAML_RELATION_NAME)) is None:
-            return saml_data
+            return {}
 
         if not relation.app:
-            return saml_data
+            return {}
 
         relation_data = {
             key: value for key, value in relation.data[relation.app].items() if key != "data"
@@ -86,6 +85,7 @@ class DjangoCharm(xiilib.django.Charm):
             logger.error("Empty x509certs in saml")
             x509cert = ""
 
+        saml_data: dict[str, str] = {}
         saml_data.update(
             {
                 "SAML_ENTITY_ID": entity_id,
