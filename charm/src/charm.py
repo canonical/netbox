@@ -104,6 +104,56 @@ class DjangoCharm(xiilib.django.Charm):
         """Handle event for ingress ready."""
         self.reconcile()
 
+    def reconcile(self) -> None:
+        """Reconcile all services."""
+        self._plan_netbox_rq()
+        super().reconcile()
+
+    def workload(self) -> ops.Container:
+        """Get workload container.
+
+        Delete this function when it is in the django 12 factor app.
+
+        Returns:
+           Workload Container
+        """
+        return self.unit.get_container("django-app")
+
+    def _plan_netbox_rq(self) -> None:
+        """Plan netbox-rq service."""
+        container = self.workload()
+        if container.can_connect():
+            container.add_layer("netbox-rq", self._netbox_rq_layer(), combine=True)
+
+    def _netbox_rq_layer(self) -> ops.pebble.LayerDict:
+        """Netbox-rq layer for Pebble.
+
+        Returns:
+           Full layer for netbox-rq
+        """
+        # As super.reconcile sets to override "replace" to all services in
+        # the base layer in the rockcraft.yaml, we need to include the
+        # full service here, and not in rockcraft.yaml.
+        # Once NetBox is integrated with the new Django 12 factor, review
+        # it to see if it would be better to put it in the rockcraft.yaml
+        # and set "override: merge" instead here. In that case, we should
+        # just set the env variables here.
+        layer: ops.pebble.LayerDict = {
+            "services": {
+                "netbox-rq": {
+                    "override": "replace",
+                    "summary": "NetBox Request Queue Worker",
+                    "startup": "enabled",
+                    "command": "/bin/python3 manage.py rqworker high default low",
+                    # This probably should not be hardcoded. Update it when we
+                    # use the final Django 12 factor.
+                    "working-dir": "/django/app",
+                    "environment": self.gen_env(),
+                    "user": "_daemon_",
+                }
+            },
+        }
+        return layer
 
 if __name__ == "__main__":
     ops.main.main(DjangoCharm)
