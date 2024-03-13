@@ -106,7 +106,7 @@ class DjangoCharm(xiilib.django.Charm):
 
     def reconcile(self) -> None:
         """Reconcile all services."""
-        self._plan_netbox_rq()
+        self._add_netbox_rq()
         super().reconcile()
 
     def workload(self) -> ops.Container:
@@ -119,8 +119,8 @@ class DjangoCharm(xiilib.django.Charm):
         """
         return self.unit.get_container("django-app")
 
-    def _plan_netbox_rq(self) -> None:
-        """Plan netbox-rq service."""
+    def _add_netbox_rq(self) -> None:
+        """Add layer for netbox-rq service."""
         container = self.workload()
         if container.can_connect():
             container.add_layer("netbox-rq", self._netbox_rq_layer(), combine=True)
