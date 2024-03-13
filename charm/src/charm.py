@@ -112,7 +112,7 @@ class DjangoCharm(xiilib.django.Charm):
     def workload(self) -> ops.Container:
         """Get workload container.
 
-        Delete this function when it is in the django 12 factor app.
+        Delete this function when it is in the django 12 factor project.
 
         Returns:
            Workload Container
