@@ -107,7 +107,50 @@ class DjangoCharm(xiilib.django.Charm):
     def reconcile(self) -> None:
         """Reconcile all services."""
         self._add_netbox_rq()
+        self._add_command_to_cron(
+            "* * * * *", "syncdatasource", "/bin/python3 manage.py syncdatasource --all"
+        )
+        self._add_command_to_cron(
+            "* * * * *", "housekeeping", "/bin/python3 manage.py housekeeping"
+        )
         super().reconcile()
+
+    def _add_command_to_cron(self, scheduling: str, name: str, command: str) -> None:
+        """Add a command that will be run with cron.
+
+        Args:
+            scheduling: scheduling following cron format.
+            name: name for the pebble service to run. Should be compliant with pebble
+               service names.
+            command: command to execute. It should not contain double quotes
+               because of how the command is run with bash -c.
+        """
+        container = self.workload()
+        if not container.can_connect():
+            return
+        layer: ops.pebble.LayerDict = {
+            "services": {
+                name: {
+                    "override": "replace",
+                    "summary": f"NetBox {name}",
+                    "startup": "disabled",
+                    "on-success": "ignore",
+                    # the command should last at least 1 second so pebble thinks
+                    # everything is correct.
+                    "command": f"bash -c 'sleep 1; {command}'",
+                    "working-dir": "/django/app",
+                    "environment": self.gen_env(),
+                    "user": "_daemon_",
+                }
+            }
+        }
+        container.add_layer(name, layer, combine=True)
+        container.push(
+            f"/etc/cron.d/{name}",
+            f"{scheduling} _daemon_ "
+            + "PEBBLE_SOCKET=/charm/container/pebble.socket pebble start {name}\n",
+            permissions=0o644,
+        )
 
     def workload(self) -> ops.Container:
         """Get workload container.

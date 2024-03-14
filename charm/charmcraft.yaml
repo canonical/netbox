@@ -75,6 +75,11 @@ config:
       description: |-
         SAML attribute used for the email.
       type: string
+    aws_endpoint_url:
+      # see https://github.com/netbox-community/netbox/issues/15427
+      description: |-
+        Environment variable for AWS_ENDPOINT_URL.
+      type: string
 
 parts:
   charm:
