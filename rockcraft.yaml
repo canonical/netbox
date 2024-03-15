@@ -99,9 +99,9 @@ parts:
             # We could use a different DJANGO_SETTINGS_MODULE env var, but has to be
             # used everywhere in that case.
             [ ! -d netbox.orig ] && mv netbox netbox.orig && cp -R netbox.orig/* .
-            cp charm_configuration.py ./netbox/configuration.py
+            cp charm/netbox_configuration.py ./netbox/configuration.py
             [ ! -f netbox/original_settings.py ] && mv netbox/settings.py netbox/original_settings.py
-            cp charm_settings.py ./netbox/settings.py
+            cp charm/netbox_settings.py ./netbox/settings.py
         after:
             - django-framework/dependencies
         override-build: |-
@@ -143,26 +143,17 @@ parts:
     cron:
       stage-packages:
         - cron
-      # plugin: dump
       plugin: nil
-      # source: charm/cron
-      # organize:
-      #   "run_after_1s": /usr/bin/run_after_1s
       override-prime: |
         craftctl default
-        # chmod a+x usr/bin/run_after_1s
     run_after_1s:
-      plugin: make
+      plugin: dump
       source: charm/run_after_1s
-    # for the bash version
-    # run_after_1s:
-    #   plugin: dump
-    #   source: charm/run_after_1s
-    #   organize:
-    #     "run_after_1s.sh": /usr/bin/run_after_1s
-    #   override-prime: |
-    #     craftctl default
-    #   chmod a+x usr/bin/run_after_1s
+      organize:
+        "run_after_1s.sh": /usr/bin/run_after_1s
+      override-prime: |
+        craftctl default
+        chmod 755 usr/bin/run_after_1s
 
 services:
   django:
