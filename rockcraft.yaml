@@ -143,7 +143,26 @@ parts:
     cron:
       stage-packages:
         - cron
+      # plugin: dump
       plugin: nil
+      # source: charm/cron
+      # organize:
+      #   "run_after_1s": /usr/bin/run_after_1s
+      override-prime: |
+        craftctl default
+        # chmod a+x usr/bin/run_after_1s
+    run_after_1s:
+      plugin: make
+      source: charm/run_after_1s
+    # for the bash version
+    # run_after_1s:
+    #   plugin: dump
+    #   source: charm/run_after_1s
+    #   organize:
+    #     "run_after_1s.sh": /usr/bin/run_after_1s
+    #   override-prime: |
+    #     craftctl default
+    #   chmod a+x usr/bin/run_after_1s
 
 services:
   django:

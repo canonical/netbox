@@ -5,6 +5,7 @@
 """Django Charm entrypoint."""
 
 import logging
+import secrets
 import typing
 import urllib.parse
 
@@ -13,6 +14,11 @@ import xiilib.django
 from charms.saml_integrator.v0.saml import SamlDataAvailableEvent, SamlRequires
 
 logger = logging.getLogger(__name__)
+
+
+CRON_EVERY_5_MINUTES = "*/5 * * * *"
+CRON_EVERY_5_MINUTES = "* * * * *"
+CRON_AT_MIDNIGHT = "0 0 * * *"
 
 
 class DjangoCharm(xiilib.django.Charm):
@@ -27,6 +33,7 @@ class DjangoCharm(xiilib.django.Charm):
             args: passthrough to CharmBase.
         """
         super().__init__(*args)
+        self.framework.observe(self.on.create_super_user_action, self._on_create_super_user_action)
         self.saml = SamlRequires(self)
         self.framework.observe(self.saml.on.saml_data_available, self._on_saml_data_available)
         self.framework.observe(self._ingress.on.ready, self._on_ingress_ready)
@@ -108,10 +115,10 @@ class DjangoCharm(xiilib.django.Charm):
         """Reconcile all services."""
         self._add_netbox_rq()
         self._add_command_to_cron(
-            "* * * * *", "syncdatasource", "/bin/python3 manage.py syncdatasource --all"
+            CRON_EVERY_5_MINUTES, "syncdatasource", "/bin/python3 manage.py syncdatasource --all"
         )
         self._add_command_to_cron(
-            "* * * * *", "housekeeping", "/bin/python3 manage.py housekeeping"
+            CRON_AT_MIDNIGHT, "housekeeping", "/bin/python3 manage.py housekeeping"
         )
         super().reconcile()
 
@@ -137,7 +144,7 @@ class DjangoCharm(xiilib.django.Charm):
                     "on-success": "ignore",
                     # the command should last at least 1 second so pebble thinks
                     # everything is correct.
-                    "command": f"bash -c 'sleep 1; {command}'",
+                    "command": f"run_after_1s {command}",
                     "working-dir": "/django/app",
                     "environment": self.gen_env(),
                     "user": "_daemon_",
@@ -147,8 +154,8 @@ class DjangoCharm(xiilib.django.Charm):
         container.add_layer(name, layer, combine=True)
         container.push(
             f"/etc/cron.d/{name}",
-            f"{scheduling} _daemon_ "
-            + "PEBBLE_SOCKET=/charm/container/pebble.socket pebble start {name}\n",
+            f"{scheduling} root "
+            + f"PEBBLE_SOCKET=/charm/container/pebble.socket pebble start {name}\n",
             permissions=0o644,
         )
 
@@ -197,6 +204,36 @@ class DjangoCharm(xiilib.django.Charm):
             },
         }
         return layer
+
+    def _on_create_super_user_action(self, event: ops.ActionEvent) -> None:
+        """Create a superuser in Django.
+
+        This should be deleted once we integrate with the Django 12 factor.
+
+        Args:
+            event: the action event.
+        """
+        random_password = secrets.token_urlsafe(16)
+        container = self.unit.get_container(self._CONTAINER_NAME)
+        if not container.can_connect():
+            event.fail("django-app container is not ready")
+        try:
+            action_environment = {
+                "DJANGO_SUPERUSER_USERNAME": event.params["username"],
+                "DJANGO_SUPERUSER_EMAIL": event.params["email"],
+                "DJANGO_SUPERUSER_PASSWORD": random_password,
+            }
+            environment = self.gen_env()
+            output, _ = container.exec(
+                ["python3", "manage.py", "createsuperuser", "--noinput"],
+                environment=(action_environment | environment),
+                combine_stderr=True,
+                working_dir=str(self._BASE_DIR / "app"),
+                user="_daemon_",
+            ).wait_output()
+            event.set_results({"output": output, "password": random_password})
+        except ops.pebble.ExecError as e:
+            event.fail(str(e.stdout))
 
 
 if __name__ == "__main__":
