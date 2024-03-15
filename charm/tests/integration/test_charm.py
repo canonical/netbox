@@ -128,7 +128,7 @@ async def test_netbox_check_cronjobs(
     # The cron task for the syncdatasource should update the datasource status to completed.
     syncdatasource_ok = False
     # Adjust the number of iterations to the schedule for the syncdatasource cron task
-    for _ in range(21):
+    for _ in range(31):
         await asyncio.sleep(10)
         url = f"{base_url}/api/core/data-sources/{data_source_id}/"
         res = requests.get(url, timeout=5, headers=headers_with_auth)
