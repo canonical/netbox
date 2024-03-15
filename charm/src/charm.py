@@ -128,8 +128,7 @@ class DjangoCharm(xiilib.django.Charm):
             scheduling: scheduling following cron format.
             name: name for the pebble service to run. Should be compliant with pebble
                service names.
-            command: command to execute. It should not contain double quotes
-               because of how the command is run with bash -c.
+            command: command to execute.
         """
         container = self.workload()
         if not container.can_connect():
