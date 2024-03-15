@@ -2,11 +2,19 @@
 # See LICENSE file for licensing details.
 
 """Integration tests NetBox charm."""
+import asyncio
+import logging
+import random
+import string
 from typing import Callable, Coroutine, List
 
 import pytest
 import requests
+from juju.action import Action
+from juju.model import Model
 from saml_test_helper import SamlK8sTestHelper
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.mark.usefixtures("netbox_app")
@@ -36,6 +44,107 @@ async def test_netbox_health(
             timeout=20,
         )
         assert res.status_code == 200
+
+
+@pytest.mark.usefixtures("netbox_app")
+async def test_netbox_rq_worker_running(
+    netbox_app_name: str, get_unit_ips: Callable[[str], Coroutine[None, None, List[str]]]
+) -> None:
+    """
+    arrange: Build and deploy the NetBox charm.
+    act: Do a get request to the status api.
+    assert: Check that there is one rq worker running.
+    """
+    unit_ips = await get_unit_ips(netbox_app_name)
+    for unit_ip in unit_ips:
+        url = f"http://{unit_ip}:8000/api/status/"
+        res = requests.get(
+            url,
+            timeout=20,
+        )
+        assert res.status_code == 200
+        assert res.json()["rq-workers-running"] == 1
+
+
+@pytest.mark.usefixtures("s3_netbox_bucket")
+@pytest.mark.usefixtures("netbox_app")
+async def test_netbox_check_cronjobs(
+    netbox_app_name: str,
+    model: Model,
+    get_unit_ips: Callable[[str], Coroutine[None, None, List[str]]],
+    s3_netbox_credentials: dict,
+    s3_netbox_configuration: dict,
+) -> None:
+    # this is a messy test. we need a user,
+    # a token, create a data source,
+    # and wait until the syncdatasource tries to
+    # sync the datasource (if the datasource is well configured,
+    # check for success, otherwise for failure).
+    unit_ip = (await get_unit_ips(netbox_app_name))[0]
+    base_url = f"http://{unit_ip}:8000"
+
+    # Create a superuser
+    netbox_app = model.applications[netbox_app_name]
+
+    username = "".join(random.choices(string.ascii_lowercase, k=10))
+    action_create_user: Action = await netbox_app.units[0].run_action(  # type: ignore
+        "create-super-user", username=username, email="admin@example.com"
+    )
+    await action_create_user.wait()
+    assert action_create_user.status == "completed"
+    password = action_create_user.results["password"]
+
+    # Get a token to work with the API
+    url = f"{base_url}/api/users/tokens/provision/"
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+    res = requests.post(
+        url, json={"username": username, "password": password}, timeout=5, headers=headers
+    )
+    assert res.status_code == 201
+
+    token = res.json()["key"]
+    logger.info("Token in test: %s", token)
+
+    # Create a datasource
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": f"TOKEN {token}",
+    }
+
+    url = f"{base_url}/api/core/data-sources/"
+    data_source_name = "".join(random.choices(string.ascii_lowercase, k=5))
+    data_source = {
+        "name": data_source_name,
+        "source_url": f"{s3_netbox_configuration['endpoint']}/{s3_netbox_configuration['bucket']}",
+        "type": "amazon-s3",
+        "description": "description",
+        "parameters": {
+            "aws_access_key_id": s3_netbox_credentials["access-key"],
+            "aws_secret_access_key": s3_netbox_credentials["secret-key"],
+        },
+    }
+    res = requests.post(url, json=data_source, timeout=5, headers=headers)
+    assert res.status_code == 201
+    data_source_id = res.json()["id"]
+
+    # Check that the cron task for the syncdatasource
+    # has updated the datasource status to completed.
+    syncdatasource_ok = False
+    # adjust to the schedule for the syncdatasource cron task
+    url = f"{base_url}/api/core/data-sources/{data_source_id}/"
+    for _ in range(20):
+        await asyncio.sleep(10)
+        res = requests.get(url, timeout=5, headers=headers)
+        assert res.status_code == 200
+        logger.info("current datasource status: %s", res.json()["status"])
+        if res.json()["status"]["value"] == "completed":
+            syncdatasource_ok = True
+            break
+    assert syncdatasource_ok, "syncdatasource process did not run or wrong result."
 
 
 @pytest.mark.usefixtures("netbox_nginx_integration")

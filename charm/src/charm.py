@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 
 CRON_EVERY_5_MINUTES = "*/5 * * * *"
-CRON_EVERY_5_MINUTES = "* * * * *"
 CRON_AT_MIDNIGHT = "0 0 * * *"
 
 

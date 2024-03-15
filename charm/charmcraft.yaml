@@ -34,8 +34,6 @@ actions:
     description: Create a super user
     username:
       type: string
-    password:
-      type: string
     email:
       type: string
 
