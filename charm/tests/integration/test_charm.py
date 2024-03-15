@@ -4,7 +4,7 @@
 """Integration tests NetBox charm."""
 import asyncio
 import logging
-import random
+import secrets
 import string
 from typing import Callable, Coroutine, List
 
@@ -90,7 +90,7 @@ async def test_netbox_check_cronjobs(
     netbox_app = model.applications[netbox_app_name]
 
     # Create a superuser
-    username = "".join(random.choices(string.ascii_lowercase, k=10))
+    username = ''.join((secrets.choice(string.ascii_letters) for i in range(8)))
     action_create_user: Action = await netbox_app.units[0].run_action(  # type: ignore
         "create-super-user", username=username, email="admin@example.com"
     )
@@ -110,7 +110,7 @@ async def test_netbox_check_cronjobs(
     # Create a datasource
     headers_with_auth = headers | {"Authorization": f"TOKEN {token}"}
     url = f"{base_url}/api/core/data-sources/"
-    data_source_name = "".join(random.choices(string.ascii_lowercase, k=5))
+    data_source_name = ''.join((secrets.choice(string.ascii_letters) for i in range(8)))
     data_source = {
         "name": data_source_name,
         "source_url": f"{s3_netbox_configuration['endpoint']}/{s3_netbox_configuration['bucket']}",
