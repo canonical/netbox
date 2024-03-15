@@ -76,10 +76,10 @@ async def test_netbox_check_cronjobs(
     s3_netbox_configuration: dict,
 ) -> None:
     """
-    arrange: Build and deploy the NetBox charm. Create a superuser, get the token,
+    arrange: Build and deploy the NetBox charm. Create a superuser and get its token.
     act: Create a s3 data source.
     assert: The cron task syncdatasource should update the status of the datasource
-        to completed
+        to completed.
     """
     unit_ip = (await get_unit_ips(netbox_app_name))[0]
     base_url = f"http://{unit_ip}:8000"
