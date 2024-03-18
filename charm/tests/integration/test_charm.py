@@ -2,7 +2,6 @@
 # See LICENSE file for licensing details.
 
 """Integration tests NetBox charm."""
-import asyncio
 import logging
 import secrets
 import string
@@ -13,6 +12,8 @@ import requests
 from juju.action import Action
 from juju.model import Model
 from saml_test_helper import SamlK8sTestHelper
+
+from tests.integration.helpers import assert_return_true_with_retry
 
 logger = logging.getLogger(__name__)
 
@@ -126,18 +127,22 @@ async def test_netbox_check_cronjobs(
     data_source_id = res.json()["id"]
 
     # The cron task for the syncdatasource should update the datasource status to completed.
-    syncdatasource_ok = False
-    # Adjust the number of iterations to the schedule for the syncdatasource cron task
-    for _ in range(31):
-        await asyncio.sleep(10)
+    def check_data_source_updated() -> bool:
+        """Check that the data source gets updated.
+
+        Returns:
+           Whether the function succeeded or not.
+        """
         url = f"{base_url}/api/core/data-sources/{data_source_id}/"
         res = requests.get(url, timeout=5, headers=headers_with_auth)
         assert res.status_code == 200
         logger.info("current datasource status: %s", res.json()["status"])
         if res.json()["status"]["value"] == "completed":
-            syncdatasource_ok = True
-            break
-    assert syncdatasource_ok, "syncdatasource process did not run or it failed."
+            return True
+        return False
+
+    # Adjust the timeout to the schedule for the syncdatasource cron task
+    await assert_return_true_with_retry(check_data_source_updated, delay=10, timeout=350)
 
 
 @pytest.mark.usefixtures("netbox_nginx_integration")
