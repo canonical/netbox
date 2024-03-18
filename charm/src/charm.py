@@ -195,7 +195,7 @@ class DjangoCharm(xiilib.django.Charm):
                     "command": "/bin/python3 manage.py rqworker high default low",
                     # This probably should not be hardcoded. Update it when we
                     # use the final Django 12 factor.
-                    "working-dir": "/django/app",
+                    "working-dir": str(self._BASE_DIR / "app"),
                     "environment": self.gen_env(),
                     "user": "_daemon_",
                 }
