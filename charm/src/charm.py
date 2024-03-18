@@ -143,7 +143,7 @@ class DjangoCharm(xiilib.django.Charm):
                     # the command should last at least 1 second so pebble thinks
                     # everything is correct.
                     "command": f"run_after_1s {command}",
-                    "working-dir": "/django/app",
+                    "working-dir": str(self._BASE_DIR / "app"),
                     "environment": self.gen_env(),
                     "user": "_daemon_",
                 }
