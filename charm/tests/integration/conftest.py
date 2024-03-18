@@ -349,7 +349,7 @@ def s3_netbox_credentials_fixture(localstack_address: str) -> dict:
 
 @pytest.fixture(scope="function", name="boto_s3_client")
 def boto_s3_client_fixture(s3_netbox_configuration: dict, s3_netbox_credentials: dict):
-    """Return a S# boto3 client ready to use
+    """Return a S3 boto3 client ready to use
 
     Returns:
         The boto S3 client
