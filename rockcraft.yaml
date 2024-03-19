@@ -144,8 +144,6 @@ parts:
       stage-packages:
         - cron
       plugin: nil
-      override-prime: |
-        craftctl default
 
 services:
   django:
