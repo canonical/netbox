@@ -126,34 +126,21 @@ class DjangoCharm(xiilib.django.Charm):
 
         Args:
             scheduling: scheduling following cron format.
-            name: name for the pebble service to run. Should be compliant with pebble
-               service names.
+            name: name for the service to run. It will determine the cron file name.
             command: command to execute.
         """
         container = self.workload()
         if not container.can_connect():
             return
-        layer: ops.pebble.LayerDict = {
-            "services": {
-                name: {
-                    "override": "replace",
-                    "summary": f"NetBox {name}",
-                    "startup": "disabled",
-                    "on-success": "ignore",
-                    # the command should last at least 1 second so pebble thinks
-                    # everything is correct.
-                    "command": f"run_after_1s {command}",
-                    "working-dir": str(self._BASE_DIR / "app"),
-                    "environment": self.gen_env(),
-                    "user": "_daemon_",
-                }
-            }
-        }
-        container.add_layer(name, layer, combine=True)
+        working_dir = str(self._BASE_DIR / "app")
+        pebble_command = (
+            f"pebble exec --user=_daemon_ -w={working_dir} "
+            f"--context={self._server._service_name} -- {command}"
+        )
         container.push(
             f"/etc/cron.d/{name}",
             f"{scheduling} root "
-            + f"PEBBLE_SOCKET=/charm/container/pebble.socket pebble start {name}\n",
+            + f"PEBBLE_SOCKET=/charm/container/pebble.socket {pebble_command}\n",
             permissions=0o644,
         )
 

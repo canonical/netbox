@@ -146,14 +146,6 @@ parts:
       plugin: nil
       override-prime: |
         craftctl default
-    run_after_1s:
-      plugin: dump
-      source: charm/run_after_1s
-      organize:
-        "run_after_1s.sh": /usr/bin/run_after_1s
-      override-prime: |
-        craftctl default
-        chmod 755 usr/bin/run_after_1s
 
 services:
   django:
