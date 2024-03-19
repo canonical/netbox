@@ -16,3 +16,4 @@ def pytest_addoption(parser: Parser) -> None:
     """
     parser.addoption(NETBOX_IMAGE_PARAM, action="store", help="Netbox app image to be deployed")
     parser.addoption("--charm-file", action="store", help="Charm file to be deployed")
+    parser.addoption("--localstack-address", action="store")

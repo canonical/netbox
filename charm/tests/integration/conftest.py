@@ -6,10 +6,14 @@
 import json
 import logging
 import os.path
+import typing
+from secrets import token_hex
 from typing import Callable, Coroutine, List
 
+import boto3
 import pytest
 import pytest_asyncio
+from botocore.config import Config as BotoConfig
 from juju.action import Action
 from juju.application import Application
 from juju.model import Model
@@ -168,6 +172,7 @@ async def netbox_app_fixture(
     redis_password: str,
     postgresql_app: Application,
     pytestconfig: Config,
+    s3_netbox_configuration: dict,
 ) -> Application:
     """Deploy netbox app."""
     resources = {
@@ -182,6 +187,7 @@ async def netbox_app_fixture(
             "redis_password": redis_password,
             "django_debug": False,
             "django_allowed_hosts": "*",
+            "aws_endpoint_url": s3_netbox_configuration["endpoint"],
         },
     )
     # If update_status comes before pebble ready, the unit gets to
@@ -301,3 +307,85 @@ async def netbox_saml_integration_fixture(
     saml_helper.register_service_provider(name=netbox_hostname, metadata=metadata_xml)
     yield relation
     await netbox_app.destroy_relation("saml", f"{saml_app.name}:saml")
+
+
+@pytest.fixture(scope="module", name="localstack_address")
+def localstack_address_fixture(pytestconfig: Config):
+    """Provides localstack IP address to be used in the integration test."""
+    address = pytestconfig.getoption("--localstack-address")
+    if not address:
+        raise ValueError("--localstack-address argument is required for selected test cases")
+    yield address
+
+
+@pytest.fixture(scope="module", name="s3_netbox_configuration")
+def s3_netbox_configuration_fixture(localstack_address: str) -> dict:
+    """Return the S3 configuration to use.
+
+    Returns:
+        The S3 configuration as a dict
+    """
+    return {
+        "endpoint": f"http://{localstack_address}:4566",
+        "bucket": "netboxbucket",
+        "path": "/",
+        "region": "us-east-1",
+        "s3-uri-style": "path",
+    }
+
+
+@pytest.fixture(scope="module", name="s3_netbox_credentials")
+def s3_netbox_credentials_fixture(localstack_address: str) -> dict:
+    """Return the S3 AWS credentials to use.
+
+    Returns:
+        The S3 credentials as a dict
+    """
+    return {
+        "access-key": token_hex(16),
+        "secret-key": token_hex(16),
+    }
+
+
+@pytest.fixture(scope="function", name="boto_s3_client")
+def boto_s3_client_fixture(s3_netbox_configuration: dict, s3_netbox_credentials: dict):
+    """Return a S3 boto3 client ready to use
+
+    Returns:
+        The boto S3 client
+    """
+    s3_client_config = BotoConfig(
+        region_name=s3_netbox_configuration["region"],
+        s3={
+            "addressing_style": "virtual",
+        },
+        # no_proxy env variable is not read by boto3, so
+        # this is needed for the tests to avoid hitting the proxy.
+        proxies={},
+    )
+
+    s3_client = boto3.client(
+        "s3",
+        s3_netbox_configuration["region"],
+        aws_access_key_id=s3_netbox_credentials["access-key"],
+        aws_secret_access_key=s3_netbox_credentials["secret-key"],
+        endpoint_url=s3_netbox_configuration["endpoint"],
+        use_ssl=False,
+        config=s3_client_config,
+    )
+    yield s3_client
+
+
+@pytest.fixture(scope="function", name="s3_netbox_bucket")
+def s3_netbox_bucket_fixture(
+    s3_netbox_configuration: dict, s3_netbox_credentials: dict, boto_s3_client: typing.Any
+):
+    """Creates a bucket using S3 configuration."""
+    bucket_name = s3_netbox_configuration["bucket"]
+    boto_s3_client.create_bucket(Bucket=bucket_name)
+    yield
+    objectsresponse = boto_s3_client.list_objects(Bucket=bucket_name)
+    if "Contents" in objectsresponse:
+        for c in objectsresponse["Contents"]:
+            boto_s3_client.delete_object(Bucket=bucket_name, Key=c["Key"])
+    boto_s3_client.delete_bucket(Bucket=bucket_name)

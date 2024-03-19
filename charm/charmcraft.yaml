@@ -27,6 +27,16 @@ description: |
 extensions:
   - django-framework
 
+actions:
+  # This action should be deleted once the last django 12 factor
+  # version is used, as it will be there
+  create-super-user:
+    description: Create a super user
+    username:
+      type: string
+    email:
+      type: string
+
 requires:
   postgresql:
     interface: postgresql_client
@@ -74,6 +84,13 @@ config:
     saml_email:
       description: |-
         SAML attribute used for the email.
+      type: string
+    aws_endpoint_url:
+      description: |-
+        Environment variable for AWS_ENDPOINT_URL.
+        This variable has to be set to the S3 compatible server that will host
+        data sources if they are not hosted in Amazon S3.
+        See https://github.com/netbox-community/netbox/issues/15427
       type: string
 
 parts:
