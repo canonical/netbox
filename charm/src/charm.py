@@ -126,7 +126,7 @@ class DjangoCharm(xiilib.django.Charm):
 
         Args:
             scheduling: scheduling following cron format.
-            name: name for the service to run. It will determine the cron file name.
+            name: name for the cron file that will identify the task.
             command: command to execute.
         """
         container = self.workload()
