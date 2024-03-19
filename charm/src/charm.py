@@ -133,6 +133,8 @@ class DjangoCharm(xiilib.django.Charm):
         if not container.can_connect():
             return
         working_dir = str(self._BASE_DIR / "app")
+        # Disable protected access to avoid hardcoding the main service name.
+        # pylint: disable=protected-access
         pebble_command = (
             f"pebble exec --user=_daemon_ -w={working_dir} "
             f"--context={self._server._service_name} -- {command}"
