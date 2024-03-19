@@ -99,9 +99,9 @@ parts:
             # We could use a different DJANGO_SETTINGS_MODULE env var, but has to be
             # used everywhere in that case.
             [ ! -d netbox.orig ] && mv netbox netbox.orig && cp -R netbox.orig/* .
-            cp charm_configuration.py ./netbox/configuration.py
+            cp charm/netbox_configuration.py ./netbox/configuration.py
             [ ! -f netbox/original_settings.py ] && mv netbox/settings.py netbox/original_settings.py
-            cp charm_settings.py ./netbox/settings.py
+            cp charm/netbox_settings.py ./netbox/settings.py
         after:
             - django-framework/dependencies
         override-build: |-
@@ -112,6 +112,8 @@ parts:
         override-prime: |-
             craftctl default
             chown -R 584792 django/app/media
+            chown -R 584792 django/app/reports
+            chown -R 584792 django/app/scripts
     django-framework/dependencies:
         # pyproject.toml breaks the building. Remove it.
         override-build: |-
@@ -121,6 +123,7 @@ parts:
             - pkg-config
             - libxmlsec1-dev
         python-packages:
+            - django-storages[s3]
             # needed to serve static assets.
             - whitenoise
             # Needed for SAML
@@ -137,9 +140,18 @@ parts:
             # needed for saml
             - libxmlsec1
             - libxmlsec1-openssl
+    cron:
+      stage-packages:
+        - cron
+      plugin: nil
 
 services:
   django:
     override: merge
     # Update from netbox.netbox.wsgi to netbox.wsgi
     command: /bin/python3 -m gunicorn -c /django/gunicorn.conf.py netbox.wsgi:application
+  cron:
+    override: merge
+    summary: "Cron Service"
+    command: "/usr/sbin/cron -f"
+    startup: enabled

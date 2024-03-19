@@ -5,6 +5,7 @@
 """Django Charm entrypoint."""
 
 import logging
+import secrets
 import typing
 import urllib.parse
 
@@ -13,6 +14,10 @@ import xiilib.django
 from charms.saml_integrator.v0.saml import SamlDataAvailableEvent, SamlRequires
 
 logger = logging.getLogger(__name__)
+
+
+CRON_EVERY_5_MINUTES = "*/5 * * * *"
+CRON_AT_MIDNIGHT = "0 0 * * *"
 
 
 class DjangoCharm(xiilib.django.Charm):
@@ -27,6 +32,7 @@ class DjangoCharm(xiilib.django.Charm):
             args: passthrough to CharmBase.
         """
         super().__init__(*args)
+        self.framework.observe(self.on.create_super_user_action, self._on_create_super_user_action)
         self.saml = SamlRequires(self)
         self.framework.observe(self.saml.on.saml_data_available, self._on_saml_data_available)
         self.framework.observe(self._ingress.on.ready, self._on_ingress_ready)
@@ -107,7 +113,38 @@ class DjangoCharm(xiilib.django.Charm):
     def reconcile(self) -> None:
         """Reconcile all services."""
         self._add_netbox_rq()
+        self._add_command_to_cron(
+            CRON_EVERY_5_MINUTES, "syncdatasource", "/bin/python3 manage.py syncdatasource --all"
+        )
+        self._add_command_to_cron(
+            CRON_AT_MIDNIGHT, "housekeeping", "/bin/python3 manage.py housekeeping"
+        )
         super().reconcile()
+
+    def _add_command_to_cron(self, scheduling: str, name: str, command: str) -> None:
+        """Add a command that will be run with cron.
+
+        Args:
+            scheduling: scheduling following cron format.
+            name: name for the cron file that will identify the task.
+            command: command to execute.
+        """
+        container = self.workload()
+        if not container.can_connect():
+            return
+        working_dir = str(self._BASE_DIR / "app")
+        # Disable protected access to avoid hardcoding the main service name.
+        # pylint: disable=protected-access
+        pebble_command = (
+            f"pebble exec --user=_daemon_ -w={working_dir} "
+            f"--context={self._server._service_name} -- {command}"
+        )
+        container.push(
+            f"/etc/cron.d/{name}",
+            f"{scheduling} root "
+            + f"PEBBLE_SOCKET=/charm/container/pebble.socket {pebble_command}\n",
+            permissions=0o644,
+        )
 
     def workload(self) -> ops.Container:
         """Get workload container.
@@ -147,13 +184,43 @@ class DjangoCharm(xiilib.django.Charm):
                     "command": "/bin/python3 manage.py rqworker high default low",
                     # This probably should not be hardcoded. Update it when we
                     # use the final Django 12 factor.
-                    "working-dir": "/django/app",
+                    "working-dir": str(self._BASE_DIR / "app"),
                     "environment": self.gen_env(),
                     "user": "_daemon_",
                 }
             },
         }
         return layer
+
+    def _on_create_super_user_action(self, event: ops.ActionEvent) -> None:
+        """Create a superuser in Django.
+
+        This should be deleted once we integrate with the Django 12 factor.
+
+        Args:
+            event: the action event.
+        """
+        random_password = secrets.token_urlsafe(16)
+        container = self.unit.get_container(self._CONTAINER_NAME)
+        if not container.can_connect():
+            event.fail("django-app container is not ready")
+        try:
+            action_environment = {
+                "DJANGO_SUPERUSER_USERNAME": event.params["username"],
+                "DJANGO_SUPERUSER_EMAIL": event.params["email"],
+                "DJANGO_SUPERUSER_PASSWORD": random_password,
+            }
+            environment = self.gen_env()
+            output, _ = container.exec(
+                ["python3", "manage.py", "createsuperuser", "--noinput"],
+                environment=(action_environment | environment),
+                combine_stderr=True,
+                working_dir=str(self._BASE_DIR / "app"),
+                user="_daemon_",
+            ).wait_output()
+            event.set_results({"output": output, "password": random_password})
+        except ops.pebble.ExecError as e:
+            event.fail(str(e.stdout))
 
 
 if __name__ == "__main__":

@@ -8,6 +8,11 @@ import json
 import os
 import urllib.parse
 
+
+# see https://github.com/netbox-community/netbox/issues/15427
+if 'DJANGO_AWS_ENDPOINT_URL' in os.environ:
+    os.environ['AWS_ENDPOINT_URL'] = os.environ['DJANGO_AWS_ENDPOINT_URL']
+
 # This is a list of valid fully-qualified domain names (FQDNs) for the NetBox server. NetBox will not permit write
 # access to the server via any other hostnames. The first FQDN in the list will be treated as the preferred name.
 #
