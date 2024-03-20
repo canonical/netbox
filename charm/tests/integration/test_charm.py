@@ -9,11 +9,10 @@ from typing import Callable, Coroutine, List
 
 import pytest
 import requests
-from juju.action import Action
 from juju.model import Model
 from saml_test_helper import SamlK8sTestHelper
 
-from tests.integration.helpers import assert_return_true_with_retry
+from tests.integration.helpers import assert_return_true_with_retry, get_new_admin_token
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ async def test_netbox_health(
         assert res.status_code == 200
 
 
-# @pytest.mark.usefixtures("netbox_app")
+@pytest.mark.usefixtures("netbox_app")
 @pytest.mark.usefixtures("s3_netbox_bucket")
 async def test_netbox_storage(
     model: Model,
@@ -58,37 +57,26 @@ async def test_netbox_storage(
 ) -> None:
     """
     arrange: Build and deploy the NetBox charm.
-    act: Do a get request to the main page and to an asset.
-    assert: Both return 200 and the page contains the correct title.
+    act: Create a site and post an image
+    assert: The site is created and there is an extra object (the image)
+        in S3.
     """
+    netbox_app = model.applications[netbox_app_name]
     unit_ip = (await get_unit_ips(netbox_app_name))[0]
     base_url = f"http://{unit_ip}:8000"
-    headers = {
+    token = get_new_admin_token(netbox_app, base_url)
+
+    # Save the current number of objects in the S3 bucket.
+    bucket_name = s3_netbox_configuration["bucket"]
+    boto_res = boto_s3_client.list_objects_v2(Bucket=bucket_name)
+    previous_keycount = boto_res["KeyCount"]
+
+    # Create a site.
+    headers_with_auth = {
         "Accept": "application/json",
         "Content-Type": "application/json",
+        "Authorization": f"TOKEN {token}",
     }
-    netbox_app = model.applications[netbox_app_name]
-
-    # Create a superuser
-    username = "".join((secrets.choice(string.ascii_letters) for i in range(8)))
-    action_create_user: Action = await netbox_app.units[0].run_action(  # type: ignore
-        "create-super-user", username=username, email="admin@example.com"
-    )
-    await action_create_user.wait()
-    assert action_create_user.status == "completed"
-    password = action_create_user.results["password"]
-
-    # Get a token to work with the API
-    url = f"{base_url}/api/users/tokens/provision/"
-    res = requests.post(
-        url, json={"username": username, "password": password}, timeout=5, headers=headers
-    )
-    assert res.status_code == 201
-    token = res.json()["key"]
-    logger.info("Token in test: %s", token)
-
-    # Create a site with an image!
-    headers_with_auth = headers | {"Authorization": f"TOKEN {token}"}
     url = f"{base_url}/api/dcim/sites/"
     site = {
         "name": "".join((secrets.choice(string.ascii_lowercase) for i in range(5))),
@@ -96,15 +84,9 @@ async def test_netbox_storage(
     }
     res = requests.post(url, json=site, timeout=5, headers=headers_with_auth)
     assert res.status_code == 201
-    print(res.content)
     site_id = res.json()["id"]
-    print("JAVI site_id", site_id)
 
-    bucket_name = s3_netbox_configuration["bucket"]
-    boto_res = boto_s3_client.list_objects_v2(Bucket=bucket_name)
-    previous_keycount = boto_res["KeyCount"]
-
-    headers_multipart_with_auth = {"Authorization": f"TOKEN {token}"}
+    # Post an image to the site previously created.
     url = f"{base_url}/api/extras/image-attachments/"
     # A one pixel image.
     smallpngimage = (
@@ -121,12 +103,11 @@ async def test_netbox_storage(
         "image_width": 1,
     }
     res = requests.post(
-        url, files=files, data=payload, timeout=5, headers=headers_multipart_with_auth
+        url, files=files, data=payload, timeout=5, headers={"Authorization": f"TOKEN {token}"}
     )
-    print("JAVI CONTENT: ", res.content)
     assert res.status_code == 201
 
-    # check that the file is in S3...
+    # check that there is a new file in S3.
     bucket_name = s3_netbox_configuration["bucket"]
     boto_res = boto_s3_client.list_objects_v2(Bucket=bucket_name)
     assert boto_res["KeyCount"] == previous_keycount + 1
@@ -167,31 +148,14 @@ async def test_netbox_check_cronjobs(
     assert: The cron task syncdatasource should update the status of the datasource
         to completed.
     """
+    netbox_app = model.applications[netbox_app_name]
     unit_ip = (await get_unit_ips(netbox_app_name))[0]
     base_url = f"http://{unit_ip}:8000"
+    token = get_new_admin_token(netbox_app, base_url)
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json",
     }
-    netbox_app = model.applications[netbox_app_name]
-
-    # Create a superuser
-    username = "".join((secrets.choice(string.ascii_letters) for i in range(8)))
-    action_create_user: Action = await netbox_app.units[0].run_action(  # type: ignore
-        "create-super-user", username=username, email="admin@example.com"
-    )
-    await action_create_user.wait()
-    assert action_create_user.status == "completed"
-    password = action_create_user.results["password"]
-
-    # Get a token to work with the API
-    url = f"{base_url}/api/users/tokens/provision/"
-    res = requests.post(
-        url, json={"username": username, "password": password}, timeout=5, headers=headers
-    )
-    assert res.status_code == 201
-    token = res.json()["key"]
-    logger.info("Token in test: %s", token)
 
     # Create a datasource
     headers_with_auth = headers | {"Authorization": f"TOKEN {token}"}

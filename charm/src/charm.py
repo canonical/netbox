@@ -318,6 +318,8 @@ class S3Parameters(pydantic.BaseModel):  # pylint: disable=no-member
         """
         # For S3 fields reference see:
         # https://github.com/canonical/charm-relation-interfaces/tree/main/interfaces/s3/v0
+        # For django-storage see:
+        # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html
         storage_dict = {
             "DJANGO_STORAGE_AWS_ACCESS_KEY_ID": self.access_key,
             "DJANGO_STORAGE_AWS_SECRET_ACCESS_KEY": self.secret_key,
