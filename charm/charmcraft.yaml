@@ -41,6 +41,9 @@ requires:
   postgresql:
     interface: postgresql_client
     limit: 1
+  storage:
+    interface: s3
+    limit: 1
   saml:
     interface: saml
     limit: 1

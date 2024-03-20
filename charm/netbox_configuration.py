@@ -268,16 +268,6 @@ SESSION_COOKIE_NAME = 'sessionid'
 # database access.) Note that the user as which NetBox runs must have read and write permissions to this path.
 SESSION_FILE_PATH = None
 
-# By default, uploaded media is stored on the local filesystem. Using Django-storages is also supported. Provide the
-# class path of the storage driver in STORAGE_BACKEND and any configuration options in STORAGE_CONFIG. For example:
-# STORAGE_BACKEND = 'storages.backends.s3boto3.S3Boto3Storage'
-# STORAGE_CONFIG = {
-#     'AWS_ACCESS_KEY_ID': 'Key ID',
-#     'AWS_SECRET_ACCESS_KEY': 'Secret',
-#     'AWS_STORAGE_BUCKET_NAME': 'netbox',
-#     'AWS_S3_REGION_NAME': 'eu-west-1',
-# }
-
 # Time zone (default: UTC)
 TIME_ZONE = 'UTC'
 
@@ -335,3 +325,16 @@ if "SAML_ENTITY_ID" in os.environ:
 REMOTE_AUTH_AUTO_CREATE_USER = True
 REMOTE_AUTH_DEFAULT_GROUPS = []
 REMOTE_AUTH_DEFAULT_PERMISSIONS = {}
+
+# By default, uploaded media is stored on the local filesystem. Using Django-storages is also supported. Provide the
+# class path of the storage driver in STORAGE_BACKEND and any configuration options in STORAGE_CONFIG. For example:
+if 'DJANGO_STORAGE_AWS_ACCESS_KEY_ID' in os.environ:
+    STORAGE_BACKEND = 'storages.backends.s3boto3.S3Boto3Storage'
+    STORAGE_CONFIG = {
+        'AWS_ACCESS_KEY_ID': os.environ.get('DJANGO_STORAGE_AWS_ACCESS_KEY_ID'),
+        'AWS_SECRET_ACCESS_KEY': os.environ.get('DJANGO_STORAGE_AWS_SECRET_ACCESS_KEY'),
+        'AWS_STORAGE_BUCKET_NAME': os.environ.get('DJANGO_STORAGE_AWS_STORAGE_BUCKET_NAME'),
+        'AWS_S3_REGION_NAME': os.environ.get('DJANGO_STORAGE_AWS_S3_REGION_NAME'),
+        'AWS_S3_ENDPOINT_URL': os.environ.get('DJANGO_STORAGE_AWS_S3_ENDPOINT_URL'),
+        'AWS_S3_ADDRESSING_STYLE': os.environ.get('DJANGO_STORAGE_AWS_S3_ADDRESSING_STYLE'),
+    }

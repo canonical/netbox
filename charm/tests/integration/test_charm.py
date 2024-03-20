@@ -47,6 +47,91 @@ async def test_netbox_health(
         assert res.status_code == 200
 
 
+# @pytest.mark.usefixtures("netbox_app")
+@pytest.mark.usefixtures("s3_netbox_bucket")
+async def test_netbox_storage(
+    model: Model,
+    netbox_app_name: str,
+    get_unit_ips: Callable[[str], Coroutine[None, None, List[str]]],
+    s3_netbox_configuration: dict,
+    boto_s3_client,
+) -> None:
+    """
+    arrange: Build and deploy the NetBox charm.
+    act: Do a get request to the main page and to an asset.
+    assert: Both return 200 and the page contains the correct title.
+    """
+    unit_ip = (await get_unit_ips(netbox_app_name))[0]
+    base_url = f"http://{unit_ip}:8000"
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+    }
+    netbox_app = model.applications[netbox_app_name]
+
+    # Create a superuser
+    username = "".join((secrets.choice(string.ascii_letters) for i in range(8)))
+    action_create_user: Action = await netbox_app.units[0].run_action(  # type: ignore
+        "create-super-user", username=username, email="admin@example.com"
+    )
+    await action_create_user.wait()
+    assert action_create_user.status == "completed"
+    password = action_create_user.results["password"]
+
+    # Get a token to work with the API
+    url = f"{base_url}/api/users/tokens/provision/"
+    res = requests.post(
+        url, json={"username": username, "password": password}, timeout=5, headers=headers
+    )
+    assert res.status_code == 201
+    token = res.json()["key"]
+    logger.info("Token in test: %s", token)
+
+    # Create a site with an image!
+    headers_with_auth = headers | {"Authorization": f"TOKEN {token}"}
+    url = f"{base_url}/api/dcim/sites/"
+    site = {
+        "name": "".join((secrets.choice(string.ascii_lowercase) for i in range(5))),
+        "slug": "".join((secrets.choice(string.ascii_lowercase) for i in range(5))),
+    }
+    res = requests.post(url, json=site, timeout=5, headers=headers_with_auth)
+    assert res.status_code == 201
+    print(res.content)
+    site_id = res.json()["id"]
+    print("JAVI site_id", site_id)
+
+    bucket_name = s3_netbox_configuration["bucket"]
+    boto_res = boto_s3_client.list_objects_v2(Bucket=bucket_name)
+    previous_keycount = boto_res["KeyCount"]
+
+    headers_multipart_with_auth = {"Authorization": f"TOKEN {token}"}
+    url = f"{base_url}/api/extras/image-attachments/"
+    # A one pixel image.
+    smallpngimage = (
+        b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x01\x00\x00\x00"
+        b"\x007n\xf9$\x00\x00\x00\nIDATx\x01c`\x00\x00\x00\x02\x00\x01su\x01\x18\x00\x00\x00"
+        b"\x00IEND\xaeB`\x82"
+    )
+    files = {"image": ("image.png", smallpngimage)}
+    payload = {
+        "content_type": "dcim.site",
+        "object_id": site_id,
+        "name": "image name",
+        "image_height": 1,
+        "image_width": 1,
+    }
+    res = requests.post(
+        url, files=files, data=payload, timeout=5, headers=headers_multipart_with_auth
+    )
+    print("JAVI CONTENT: ", res.content)
+    assert res.status_code == 201
+
+    # check that the file is in S3...
+    bucket_name = s3_netbox_configuration["bucket"]
+    boto_res = boto_s3_client.list_objects_v2(Bucket=bucket_name)
+    assert boto_res["KeyCount"] == previous_keycount + 1
+
+
 @pytest.mark.usefixtures("netbox_app")
 async def test_netbox_rq_worker_running(
     netbox_app_name: str, get_unit_ips: Callable[[str], Coroutine[None, None, List[str]]]
