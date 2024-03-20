@@ -64,7 +64,7 @@ async def test_netbox_storage(
     netbox_app = model.applications[netbox_app_name]
     unit_ip = (await get_unit_ips(netbox_app_name))[0]
     base_url = f"http://{unit_ip}:8000"
-    token = get_new_admin_token(netbox_app, base_url)
+    token = await get_new_admin_token(netbox_app, base_url)
 
     # Save the current number of objects in the S3 bucket.
     bucket_name = s3_netbox_configuration["bucket"]
@@ -151,7 +151,7 @@ async def test_netbox_check_cronjobs(
     netbox_app = model.applications[netbox_app_name]
     unit_ip = (await get_unit_ips(netbox_app_name))[0]
     base_url = f"http://{unit_ip}:8000"
-    token = get_new_admin_token(netbox_app, base_url)
+    token = await get_new_admin_token(netbox_app, base_url)
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json",

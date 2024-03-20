@@ -327,7 +327,8 @@ REMOTE_AUTH_DEFAULT_GROUPS = []
 REMOTE_AUTH_DEFAULT_PERMISSIONS = {}
 
 # By default, uploaded media is stored on the local filesystem. Using Django-storages is also supported. Provide the
-# class path of the storage driver in STORAGE_BACKEND and any configuration options in STORAGE_CONFIG. For example:
+# class path of the storage driver in STORAGE_BACKEND and any configuration options in STORAGE_CONFIG.
+# For the NetBox charm, the only supported option is S3 storage.
 if 'DJANGO_STORAGE_AWS_ACCESS_KEY_ID' in os.environ:
     STORAGE_BACKEND = 'storages.backends.s3boto3.S3Boto3Storage'
     STORAGE_CONFIG = {
