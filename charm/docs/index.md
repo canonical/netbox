@@ -18,6 +18,12 @@ For DevOps or SRE teams this charm will make operating NetBox simple
 and straightforward through Juju's clean interface. It will allow easy
 deployment into multiple environments for testing of changes.
 
+
+## Limitations
+
+TODO Talk about limitations with scripts/reports and redirect to the
+how-to for scripts/reports.
+
 ## Other resources
 
 - [Netbox upstream repository](https://github.com/netbox-community/netbox)
