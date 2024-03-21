@@ -14,12 +14,30 @@ Avoid using this README file for information that is maintained or published els
 Use links instead.
 -->
 
-# NetBox charm
+# NetBox charm operator
 
-Charmhub package name: netbox
-More information: https://charmhub.io/netbox
+A Juju charm deploying and managing NetBox on Kubernetes.
 
-Describe your charm in one or two sentences.
+NetBox is the go-to solution for modeling and documenting network
+infrastructure for thousands of organizations worldwide. As a
+successor to legacy IPAM and DCIM applications, NetBox provides a
+cohesive, extensive, and accessible data model for all things
+networked.
+
+
+This charm simplifies initial deployment and "day N" operations of
+NetBox on Kubernetes, such as integration with SSO, access to S3 for
+file storage and more. It allows for deployment on many
+different Kubernetes platforms, from MicroK8s to Charmed Kubernetes to
+public cloud Kubernetes offerings.
+
+As such, the charm makes it easy for those looking to take control of
+their own NetBox server whilst keeping operations simple, and gives them
+the freedom to deploy on the Kubernetes platform of their choice.
+
+For DevOps or SRE teams this charm will make operating NetBox simple
+and straightforward through Juju's clean interface. It will allow easy
+deployment into multiple environments for testing of changes.
 
 ## Other resources
 
@@ -27,8 +45,14 @@ Describe your charm in one or two sentences.
 
 - [Netbox upstream repository](https://github.com/netbox-community/netbox)
 
-- [Read more](https://example.com)
+* [Get support](https://discourse.charmhub.io/)
 
-- [Contributing](CONTRIBUTING.md) <!-- or link to other contribution documentation -->
+* [Join our online chat](https://matrix.to/#/#charmhub-charmdev:ubuntu.com)
+
+* [Contribute](https://charmhub.io/netbox/docs/contributing)
+
+* [Getting Started](https://charmhub.io/netbox/docs/getting-started)
 
 - See the [Juju SDK documentation](https://juju.is/docs/sdk) for more information about developing and improving charms.
+
+---
