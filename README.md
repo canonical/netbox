@@ -1,3 +1,11 @@
+# NetBox Operator
+
+This repository contains Netbox plus a Juju charm for deploying and managing NetBox on Kubernetes. See [charm README](./charm/README.md) for more information.
+
+For the original Netbox repository, see https://github.com/netbox-community/netbox/
+
+# NetBox
+
 <div align="center">
   <img src="https://raw.githubusercontent.com/netbox-community/netbox/develop/docs/netbox_logo.svg" width="400" alt="NetBox logo" />
   <p><strong>The cornerstone of every automated network</strong></p>
