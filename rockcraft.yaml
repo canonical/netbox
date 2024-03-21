@@ -111,7 +111,8 @@ parts:
             craftctl default
         override-prime: |-
             craftctl default
-            chown -R 584792 django/app/media
+            # Do not allow to write in media folder. Just S3 storage.
+            # chown -R 584792 django/app/media
             chown -R 584792 django/app/reports
             chown -R 584792 django/app/scripts
     django-framework/dependencies:
