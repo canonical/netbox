@@ -40,19 +40,29 @@ juju deploy netbox
 At this point netbox should be blocked as there it no S3 integration for
 storage, Redis nor PostgreSQL.
 
+Set the allowed hosts. In this example every host is allowed. For a production environment
+only the used hosts should be allowed.
+```
+juju config nebox django_allowed_hosts='*'
+```
+
+
 ### Redis
 
 NetBox requires Redis to work. Currently you can configure Redis with 
-configuration options.
+configuration options (to be changed to an integration).
 
+Deploy redis-k8s:
 ```
 juju deploy redis-k8s --channel=latest/edge
 ```
 
+To get the admin_password:
 ```
 juju run redis-k8s/0 get-initial-admin-password
 ```
 
+Configure NetBox:
 ```
 juju config netbox redis_hostname=redis-k8s-0.redis-k8s-endpoints redis_password=<admin_password>
 ```
@@ -62,6 +72,8 @@ juju config netbox redis_hostname=redis-k8s-0.redis-k8s-endpoints redis_password
 
 juju deploy postgresql-k8s --channel 14/stable --trust
 juju integrate postgresql-k8s netbox
+
+
 ### Deploy s3-integrator
 juju deploy s3-integrator --channel edge
 juju config s3-integrator endpoint="<aws_endpoing_url>" bucket=<bucket_name> path=<path_in_bucket> region=<region> s3-uri-style=<path_or_host>
@@ -70,4 +82,26 @@ juju run s3-integrator/leader sync-s3-credentials access-key=${AWS_ACCESS_KEY_ID
 juju integrate s3-integrator netbox
 
 
-# TODO
+### Deploy traefik-k8s 
+
+You need to enable MetalLb if using MicroK8s. See for more information: https://charmhub.io/traefik-k8s
+
+Example for path mode:
+
+juju deploy traefik-k8s --channel edge --trust
+juju config traefik-k8s external_hostname=<netbox_hostname>
+juju config traefik-k8s routing_mode=path
+juju integrate traefik-k8s netbox
+juju run traefik-k8s/0 show-proxied-endpoints --format=yaml
+
+
+If the host  netbox_hostname can be resolved to the correct IP (the load balancer IP), 
+you should be able to browse NetBox in the url
+
+http://netbox_hostname/netbox-tutorial-netbox
+(run `juju run traefik-k8s/0 show-proxied-endpoints --format=yaml` to check traefik proxied endpoint)
+
+To create a superuser:
+juju run netbox/0 create-super-user username=<admin_username> email=<admin_email>
+
+
