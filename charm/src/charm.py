@@ -10,7 +10,13 @@ import typing
 import urllib.parse
 
 import ops
+import pydantic
 import xiilib.django
+from charms.data_platform_libs.v0.s3 import (
+    CredentialsChangedEvent,
+    CredentialsGoneEvent,
+    S3Requirer,
+)
 from charms.saml_integrator.v0.saml import SamlDataAvailableEvent, SamlRequires
 
 logger = logging.getLogger(__name__)
@@ -23,6 +29,7 @@ CRON_AT_MIDNIGHT = "0 0 * * *"
 class DjangoCharm(xiilib.django.Charm):
     """Django Charm service."""
 
+    _S3_RELATION_NAME = "storage"
     _SAML_RELATION_NAME = "saml"
 
     def __init__(self, *args: typing.Any) -> None:
@@ -32,11 +39,15 @@ class DjangoCharm(xiilib.django.Charm):
             args: passthrough to CharmBase.
         """
         super().__init__(*args)
-        self.framework.observe(self.on.create_super_user_action, self._on_create_super_user_action)
         self.saml = SamlRequires(self)
+        self.s3 = S3Requirer(self, self._S3_RELATION_NAME)
+
         self.framework.observe(self.saml.on.saml_data_available, self._on_saml_data_available)
+        self.framework.observe(self.s3.on.credentials_changed, self._on_s3_credential_changed)
+        self.framework.observe(self.s3.on.credentials_gone, self._on_s3_credential_gone)
         self.framework.observe(self._ingress.on.ready, self._on_ingress_ready)
         self.framework.observe(self._ingress.on.revoked, self._on_ingress_revoked)
+        self.framework.observe(self.on.create_super_user_action, self._on_create_super_user_action)
 
     def gen_env(self) -> dict[str, str]:
         """Return the environment variables for django scripts.
@@ -54,7 +65,24 @@ class DjangoCharm(xiilib.django.Charm):
                 parsed_ingress_url = parsed_ingress_url._replace(path="")
                 env["DJANGO_SAML_SP_ENTITY_ID"] = parsed_ingress_url.geturl()
         env |= self.saml_env()
+        env |= self.s3_env()
         return env
+
+    def s3_env(self) -> dict[str, str]:
+        """Environment variables for S3 for storage.
+
+        This should disappear/get updated once Django 12
+        factor supports the S3 integration.
+
+        Returns:
+           dict with environment variables.
+        """
+        try:
+            s3_parameters = S3Parameters(**self.s3.get_s3_connection_info())
+            return s3_parameters.to_env()
+        except pydantic.ValidationError:
+            logger.exception("Invalid/Missing S3 parameters.")
+            return {}
 
     def saml_env(self) -> dict[str, str]:
         """Environment variables for SAML.
@@ -98,6 +126,22 @@ class DjangoCharm(xiilib.django.Charm):
             "SAML_X509CERTS": x509cert,
         }
 
+    def _on_s3_credential_changed(self, _: CredentialsChangedEvent) -> None:
+        """Handle event for S3 Credentials Changed.
+
+        This should disappear/get updated once Django 12
+        factor supports the S3 integration.
+        """
+        self.reconcile()
+
+    def _on_s3_credential_gone(self, _: CredentialsGoneEvent) -> None:
+        """Handle event for S3 Credentials Gone.
+
+        This should disappear/get updated once Django 12
+        factor supports the S3 integration.
+        """
+        self.reconcile()
+
     def _on_saml_data_available(self, _: SamlDataAvailableEvent) -> None:
         """Handle event for Saml data available."""
         self.reconcile()
@@ -112,6 +156,19 @@ class DjangoCharm(xiilib.django.Charm):
 
     def reconcile(self) -> None:
         """Reconcile all services."""
+        # This is an interesting situation for the Django 12 factor project,
+        # as this missing integration (if required) should block the charm,
+        # as it can mean losing data.
+        try:
+            S3Parameters(**self.s3.get_s3_connection_info())
+        except pydantic.ValidationError:
+            logger.exception("Invalid/Missing S3 parameters.")
+            status = ops.BlockedStatus("Waiting for correct s3 storage integration")
+            self.unit.status = status
+            if self.unit.is_leader():
+                self.app.status = status
+            return
+
         self._add_netbox_rq()
         self._add_command_to_cron(
             CRON_EVERY_5_MINUTES, "syncdatasource", "/bin/python3 manage.py syncdatasource --all"
@@ -221,6 +278,57 @@ class DjangoCharm(xiilib.django.Charm):
             event.set_results({"output": output, "password": random_password})
         except ops.pebble.ExecError as e:
             event.fail(str(e.stdout))
+
+
+class S3Parameters(pydantic.BaseModel):  # pylint: disable=no-member
+    """Configuration for accessing S3 bucket.
+
+    Attributes:
+        access_key: AWS access key.
+        secret_key: AWS secret key.
+        region: The region to connect to the object storage.
+        bucket: The bucket name.
+        endpoint: The endpoint used to connect to the object storage.
+        path: The path inside the bucket to store objects.
+        s3_uri_style: The S3 protocol specific bucket path lookup type. Can be "path" or "host".
+        addressing_style: S3 protocol addressing style, can be "path" or "virtual".
+    """
+
+    access_key: str = pydantic.Field(alias="access-key")
+    secret_key: str = pydantic.Field(alias="secret-key")
+    region: typing.Optional[str]
+    bucket: str
+    endpoint: typing.Optional[str]
+    path: str = pydantic.Field(default="")
+    s3_uri_style: typing.Optional[str] = pydantic.Field(alias="s3-uri-style")
+
+    @property
+    def addressing_style(self) -> typing.Optional[str]:
+        """Translates s3_uri_style to AWS addressing_style."""
+        if self.s3_uri_style == "host":
+            return "virtual"
+        # If None or "path", it does not change.
+        return self.s3_uri_style
+
+    def to_env(self) -> dict[str, str]:
+        """Convert to env variables.
+
+        Returns:
+           dict with environment variables for django storage.
+        """
+        # For S3 fields reference see:
+        # https://github.com/canonical/charm-relation-interfaces/tree/main/interfaces/s3/v0
+        # For django-storage see:
+        # https://django-storages.readthedocs.io/en/latest/backends/amazon-S3.html
+        storage_dict = {
+            "DJANGO_STORAGE_AWS_ACCESS_KEY_ID": self.access_key,
+            "DJANGO_STORAGE_AWS_SECRET_ACCESS_KEY": self.secret_key,
+            "DJANGO_STORAGE_AWS_STORAGE_BUCKET_NAME": self.bucket,
+            "DJANGO_STORAGE_AWS_S3_REGION_NAME": self.region,
+            "DJANGO_STORAGE_AWS_S3_ENDPOINT_URL": self.endpoint,
+            "DJANGO_STORAGE_AWS_S3_ADDRESSING_STYLE": self.addressing_style,
+        }
+        return {k: v for k, v in storage_dict.items() if v is not None}
 
 
 if __name__ == "__main__":

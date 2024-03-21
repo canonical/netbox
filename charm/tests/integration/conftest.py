@@ -80,6 +80,12 @@ def postgresql_app_name_fixture() -> str:
     return "postgresql-k8s"
 
 
+@pytest.fixture(scope="module", name="s3_integrator_app_name")
+def s3_integrator_app_name_fixture() -> str:
+    """Return the name of the s3-integrator application deployed for tests."""
+    return "s3-integrator"
+
+
 @pytest.fixture(scope="module", name="netbox_app_name")
 def netbox_app_name_fixture() -> str:
     """Return the name of the netbox application deployed for tests."""
@@ -140,6 +146,59 @@ async def postgresql_app_fixture(
     return app
 
 
+@pytest.fixture(scope="module", name="s3_netbox_configuration")
+def s3_netbox_configuration_fixture(localstack_address: str) -> dict:
+    """Return the S3 configuration to use.
+
+    Returns:
+        The S3 configuration as a dict
+    """
+    return {
+        "endpoint": f"http://{localstack_address}:4566",
+        "bucket": "netboxbucket",
+        "path": "/",
+        "region": "us-east-1",
+        "s3-uri-style": "path",
+    }
+
+
+@pytest.fixture(scope="module", name="s3_netbox_credentials")
+def s3_netbox_credentials_fixture(localstack_address: str) -> dict:
+    """Return the S3 AWS credentials to use.
+
+    Returns:
+        The S3 credentials as a dict
+    """
+    return {
+        "access-key": token_hex(16),
+        "secret-key": token_hex(16),
+    }
+
+
+@pytest_asyncio.fixture(scope="module", name="s3_integrator_app")
+async def s3_integrator_app_fixture(
+    model: Model,
+    s3_integrator_app_name: str,
+    s3_netbox_configuration: dict,
+    s3_netbox_credentials: dict,
+):
+    """Returns a s3-integrator app configured with parameters."""
+    s3_integrator_app = await model.deploy(
+        "s3-integrator",
+        application_name=s3_integrator_app_name,
+        channel="latest/edge",
+        config=s3_netbox_configuration,
+    )
+    await model.wait_for_idle(apps=[s3_integrator_app_name], idle_period=5, status="blocked")
+    action_sync_s3_credentials: Action = await s3_integrator_app.units[0].run_action(
+        "sync-s3-credentials",
+        **s3_netbox_credentials,
+    )
+    await action_sync_s3_credentials.wait()
+    await model.wait_for_idle(apps=[s3_integrator_app_name], status="active")
+    return s3_integrator_app
+
+
 @pytest_asyncio.fixture(scope="module", name="netbox_app_image")
 def netbox_app_image_fixture(pytestconfig: Config) -> str:
     """Get value from parameter netbox-image."""
@@ -173,6 +232,8 @@ async def netbox_app_fixture(
     postgresql_app: Application,
     pytestconfig: Config,
     s3_netbox_configuration: dict,
+    s3_integrator_app_name: str,
+    s3_integrator_app: Application,
 ) -> Application:
     """Deploy netbox app."""
     resources = {
@@ -192,10 +253,12 @@ async def netbox_app_fixture(
     )
     # If update_status comes before pebble ready, the unit gets to
     # error state. Just do not fail in that case.
-    await model.wait_for_idle(apps=[netbox_app_name], status="waiting", raise_on_error=False)
+    await model.wait_for_idle(apps=[netbox_app_name], raise_on_error=False)
 
+    await model.relate(f"{netbox_app_name}:storage", f"{s3_integrator_app_name}")
     await model.relate(f"{netbox_app_name}:postgresql", f"{postgresql_app_name}")
     await model.wait_for_idle(apps=[netbox_app_name, postgresql_app_name], status="active")
+
     return app
 
 
@@ -316,35 +379,6 @@ def localstack_address_fixture(pytestconfig: Config):
     if not address:
         raise ValueError("--localstack-address argument is required for selected test cases")
     yield address
-
-
-@pytest.fixture(scope="module", name="s3_netbox_configuration")
-def s3_netbox_configuration_fixture(localstack_address: str) -> dict:
-    """Return the S3 configuration to use.
-
-    Returns:
-        The S3 configuration as a dict
-    """
-    return {
-        "endpoint": f"http://{localstack_address}:4566",
-        "bucket": "netboxbucket",
-        "path": "/",
-        "region": "us-east-1",
-        "s3-uri-style": "path",
-    }
-
-
-@pytest.fixture(scope="module", name="s3_netbox_credentials")
-def s3_netbox_credentials_fixture(localstack_address: str) -> dict:
-    """Return the S3 AWS credentials to use.
-
-    Returns:
-        The S3 credentials as a dict
-    """
-    return {
-        "access-key": token_hex(16),
-        "secret-key": token_hex(16),
-    }
 
 
 @pytest.fixture(scope="function", name="boto_s3_client")
