@@ -24,7 +24,6 @@ successor to legacy IPAM and DCIM applications, NetBox provides a
 cohesive, extensive, and accessible data model for all things
 networked.
 
-
 This charm simplifies initial deployment and "day N" operations of
 NetBox on Kubernetes, such as integration with SSO, access to S3 for
 file storage and more. It allows for deployment on many
