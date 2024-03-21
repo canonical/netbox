@@ -48,6 +48,8 @@ missing, please [file a bug](https://github.com/canonical/netbox/issues).
   1. [Getting Started](tutorial/getting-started.md)
 1. [How to](how-to)
   1. [Contribute](how-to/contribute.md)
+  2. [Configure SAML](how-to/configure-saml.md)
+  3. [Configure Data Sources for HA](how-to/configure-datasources.md)
 1. [Reference](reference)
   1. [Actions](reference/actions.md)
   2. [Integrations](reference/integrations.md)
