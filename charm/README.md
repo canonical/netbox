@@ -1,3 +1,9 @@
+[![CharmHub Badge](https://charmhub.io/netbox/badge.svg)](https://charmhub.io/netbox)
+[![Publish to edge](https://github.com/canonical/netbox/actions/workflows/publish_charm.yaml/badge.svg)](https://github.com/canonical/netbox/actions/workflows/publish_charm.yaml)
+[![Promote charm](https://github.com/canonical/netbox/actions/workflows/promote_charm.yaml/badge.svg)](https://github.com/canonical/netbox/actions/workflows/promote_charm.yaml)
+[![Discourse Status](https://img.shields.io/discourse/status?server=https%3A%2F%2Fdiscourse.charmhub.io&style=flat&label=CharmHub%20Discourse)](https://discourse.charmhub.io)
+
+
 <!--
 Avoid using this README file for information that is maintained or published elsewhere, e.g.:
 
