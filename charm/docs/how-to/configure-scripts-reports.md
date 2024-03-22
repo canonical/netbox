@@ -13,7 +13,7 @@ option `aws_endpoint_url` should be set to the url of the S3 server, as NetBox b
 allows using Amazon S3. This option limit the S3 compatible servers to just one possible 
 S3 server. For example, if you use minio in the url `https://minio.example.com`, you
 should run `juju config netbox aws_endpoint_url=https://minio.example.com`.
-	
+
 Once a data source for "Git" or "Amazon S3" is configured (menu Operations -> Data Sources),
 it should be synced (blue botton in the top right of the data source screen).
 

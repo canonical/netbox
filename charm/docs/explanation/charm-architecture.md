@@ -1,7 +1,30 @@
-# TODO
+# NetBox charm architecture
 
-This should be related to 12 Factor.
+The NetBox charm initial version has been generated with the 
+help of the 12 Factor Project. The 12 Factor Project provides many 
+of the functionalities needed by this charm like:
+- PostgreSQL integration
+- Django migrations
+- Ingress integration
+- COS (Prometheus metrics and Loki logs for gunicorn).
+
+For the static assets, gunicorn is used with the help of the  WhiteNoiseMiddleware.
+
+There is only one container for each unit of NetBox, that runs the next 
+services managed by Pebble:
+- django. Runs gunicorn.
+- cron. Cron service that runs management commands for housekeeping and syncdatasource.
+- statsd_exporter. To expose gunicorn metrics.
 
 
-Talk about the limitations with scripts and reports and how 
-it works with the syncdatasource management command.
+Besides the integrations provided directly by the 12 Factor project, the next
+integrations are implemented in NetBox:
+- SAML integration.
+- S3 integration.
+
+Currently Redis is configured using environment variables. This will be updated
+to a Redis integration.
+
+NetBox charm is designed for a fully high availability (HA) environment, and many 
+instances can be run for it. See [Configure Scripts and Reports for HA](../how-to/configure-scripts-reports.md)
+for the requirements to use scripts and reports in this HA configuration.
