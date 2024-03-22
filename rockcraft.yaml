@@ -142,7 +142,37 @@ parts:
             - libxmlsec1
             - libxmlsec1-openssl
             # needed (at least) to check git certificates in data sources.
-            - ca-certificates
+            # - openssl
+            # - ca-certificates
+        override-prime: |
+          craftctl default
+          # This is required for NetBox data sources to not fail because of SSLCertVerificationError.
+          # The alternative is to install ca-certificates, create
+          # the ${CRAFT_PRIME}/etc/ca-certificates.conf, run update-ca-certificates
+          # against ${CRAFT_PRIME} directories and fix the symbolic links.
+          # Just copying the file ca-certificates.crt is not enough for Netbox to work correctly.
+          # This looks to happen because maintainer scripts are not ran by rockcraft.
+          # See for example https://github.com/canonical/kratos-rock/issues/26#issuecomment-1727909981
+          mkdir -p "$CRAFT_PRIME/etc/ssl/certs"
+          cp --dereference /etc/ssl/certs/* "$CRAFT_PRIME/etc/ssl/certs"
+          # Does this make any sense at all???
+          # It looks I am not the only one... https://github.com/canonical/kratos-rock/issues/26
+          # Their solution (generating or even just copying the ca-certificates.crt file) does not work for me :(
+          # For maximum compatibility, I use the update-ca-certificates instead of just copying the certificates
+          # and run openssl rehash, so everything is generated.
+          # (
+          #   cd ${CRAFT_PRIME}/usr/share/ca-certificates/
+          #   find . -name "*crt" > ${CRAFT_PRIME}/etc/ca-certificates.conf
+          # )
+          # ${CRAFT_PRIME}/usr/sbin/update-ca-certificates --certsconf ${CRAFT_PRIME}/etc/ca-certificates.conf --etccertsdir ${CRAFT_PRIME}/etc/ssl/certs --certsdir ${CRAFT_PRIME}/usr/share/ca-certificates/  --localcertsdir ${CRAFT_PRIME}/usr/local/share/ca-certificates
+          # # Fix symlinks.
+          # find ./etc/ssl/certs -type l | while read l; do
+          #    #target="$(realpath "$l")"
+          #    #ln -fs /$(realpath --relative-to="$(realpath -s ${CRAFT_PRIME})" "$target") "$l"
+          #    target="$(realpath "$l")"
+          #    cp --remove-destination "$target" "$l"
+          # done
+
     cron:
       stage-packages:
         - cron
