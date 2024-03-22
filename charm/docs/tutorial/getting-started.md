@@ -120,4 +120,4 @@ juju run netbox/0 create-super-user username=<admin_username> email=<admin_email
 ```
 
 Congratulations, With the username created and the password provided in the response, 
-you have now full access to your onw NetBox!
+you have now full access to your own NetBox!

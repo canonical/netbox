@@ -2,7 +2,7 @@
 
 NetBox charm is designed with high availability (HA) in mind. As there is no support
 for a shared filesystem, this implies that reports and scripts should not be uploaded as file uploads,
-as they will not work correclty with multiple instances and there is risk of data loss.
+as they will not work correctly with multiple instances and there is risk of data loss.
 
 To use scripts and reports, it is necessary to configure a Data Source, this can be of type 
 "Git" or "Amazon S3". The git repository https://github.com/netbox-community/customizations.git is
@@ -15,7 +15,7 @@ S3 server. For example, if you use minio in the url `https://minio.example.com`,
 should run `juju config netbox aws_endpoint_url=https://minio.example.com`.
 
 Once a data source for "Git" or "Amazon S3" is configured (menu Operations -> Data Sources),
-it should be synced (blue botton in the top right of the data source screen).
+it should be synced (blue button in the top right of the data source screen).
 
 Once a data source is created and synced, scripts and reports can be created from the 
 data source (menu Customization -> reports & scripts). For that, the file in the data
