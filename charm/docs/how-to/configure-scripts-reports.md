@@ -1,4 +1,4 @@
-# TODO
+# Configure scripts and reports for high availability
 
 For HA. can be "Git" or "Amazon S3".
 

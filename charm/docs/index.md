@@ -21,8 +21,19 @@ deployment into multiple environments for testing of changes.
 
 ## Limitations
 
-TODO Talk about limitations with scripts/reports and redirect to the
-how-to for scripts/reports.
+The NetBox charm is designed for a high availability (HA) deployment. 
+This implies that it can be scaled to more than one units.
+
+This implies that File Upload cannot be used for scripts and reports,
+as the file will be uploaded to only one of the units. Besides, if the
+pod gets rescheduled, those files will be lost.
+
+Giving the limitations of NetBox for scripts and reports, the alternative
+is using a Data Source, and creating the scripts and reports from
+the Data Source, using the "Auto sync enabled" checkbox. Using this checkbox,
+the scripts and reports will be synchronized every 5 minutos in all
+units. See [Configure Scripts and Reports for HA](how-to/configure-scripts-reports.md)
+for more information.
 
 ## Other resources
 
@@ -55,7 +66,7 @@ missing, please [file a bug](https://github.com/canonical/netbox/issues).
 1. [How to](how-to)
   1. [Contribute](how-to/contribute.md)
   2. [Configure SAML](how-to/configure-saml.md)
-  3. [Configure Data Sources for HA](how-to/configure-datasources.md)
+  3. [Configure Scripts and Reports for HA](how-to/configure-scripts-reports.md)
 1. [Reference](reference)
   1. [Actions](reference/actions.md)
   2. [Integrations](reference/integrations.md)

@@ -142,16 +142,16 @@ parts:
             - libxmlsec1
             - libxmlsec1-openssl
         override-prime: |
-          craftctl default
-          # This is required for NetBox data sources to not fail because of SSLCertVerificationError.
-          # The alternative is to install ca-certificates, create
-          # the ${CRAFT_PRIME}/etc/ca-certificates.conf, run update-ca-certificates
-          # against ${CRAFT_PRIME} directories and fix the symbolic links.
-          # Just copying the file ca-certificates.crt is not enough for Netbox to work correctly.
-          # This looks to happen because maintainer scripts are not ran by rockcraft.
-          # See for example https://github.com/canonical/kratos-rock/issues/26#issuecomment-1727909981
-          mkdir -p "$CRAFT_PRIME/etc/ssl/certs"
-          cp --dereference /etc/ssl/certs/* "$CRAFT_PRIME/etc/ssl/certs"
+            craftctl default
+            # This is required for NetBox data sources to not fail because of SSLCertVerificationError.
+            # The alternative is to install ca-certificates, create
+            # the ${CRAFT_PRIME}/etc/ca-certificates.conf, run update-ca-certificates
+            # against ${CRAFT_PRIME} directories and fix the symbolic links.
+            # Just copying the file ca-certificates.crt is not enough for Netbox to work correctly.
+            # This looks to happen because maintainer scripts are not ran by rockcraft.
+            # See for example https://github.com/canonical/kratos-rock/issues/26#issuecomment-1727909981
+            mkdir -p "$CRAFT_PRIME/etc/ssl/certs"
+            cp --dereference /etc/ssl/certs/* "$CRAFT_PRIME/etc/ssl/certs"
 
     cron:
       stage-packages:
