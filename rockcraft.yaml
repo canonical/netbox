@@ -116,6 +116,8 @@ parts:
             chown -R 584792 django/app/reports
             chown -R 584792 django/app/scripts
     django-framework/dependencies:
+        overlay-packages:
+            - ca-certificates
         # pyproject.toml breaks the building. Remove it.
         override-build: |-
             rm -f pyproject.toml
@@ -141,18 +143,6 @@ parts:
             # needed for saml
             - libxmlsec1
             - libxmlsec1-openssl
-        override-prime: |
-            craftctl default
-            # This is required for NetBox git data sources to not fail because of SSLCertVerificationError.
-            # The alternative is to install ca-certificates, creating
-            # the ${CRAFT_PRIME}/etc/ca-certificates.conf, running update-ca-certificates
-            # against ${CRAFT_PRIME} directories and fixing the symbolic links.
-            # Just copying the file ca-certificates.crt is not enough for Netbox to work correctly
-            # (it requires at least running openssh rehash).
-            # This looks to happen because maintainer scripts are not ran by rockcraft.
-            # See for example https://github.com/canonical/kratos-rock/issues/26#issuecomment-1727909981
-            mkdir -p "$CRAFT_PRIME/etc/ssl/certs"
-            cp --dereference /etc/ssl/certs/* "$CRAFT_PRIME/etc/ssl/certs"
 
     cron:
       stage-packages:
