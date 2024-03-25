@@ -24,6 +24,9 @@ description: |
     to legacy IPAM and DCIM applications, NetBox provides a cohesive,
     extensive, and accessible data model for all things networked.
 
+links:
+  documentation: https://discourse.charmhub.io/t/synapse-documentation-overview/11358
+
 extensions:
   - django-framework
 
