@@ -38,6 +38,7 @@ For DevOps or SRE teams this charm will make operating NetBox simple
 and straightforward through Juju's clean interface. It will allow easy
 deployment into multiple environments for testing of changes.
 
+
 ## Other resources
 
 <!-- If your charm is documented somewhere else other than Charmhub, provide a link separately. -->
