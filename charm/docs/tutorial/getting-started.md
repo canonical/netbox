@@ -105,7 +105,7 @@ juju config traefik-k8s routing_mode=path
 juju integrate traefik-k8s netbox
 ```
 
-If the host netbox_hostname can be resolved to the correct IP (the load balancer IP),
+If the host `netbox_hostname` can be resolved to the correct IP (the load balancer IP),
 you should be able to browse NetBox in the url http://netbox_hostname/netbox-tutorial-netbox
 
 You can check the proxied endpoints with the command:
