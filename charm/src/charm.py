@@ -71,8 +71,8 @@ class DjangoCharm(xiilib.django.Charm):
     def s3_env(self) -> dict[str, str]:
         """Environment variables for S3 for storage.
 
-        This should disappear/get updated once Django 12
-        factor supports the S3 integration.
+        This should disappear/get updated once paas-app-charmer project
+        supports the S3 integration.
 
         Returns:
            dict with environment variables.
@@ -110,7 +110,7 @@ class DjangoCharm(xiilib.django.Charm):
         x509certs = relation_data.get("x509certs", "")
 
         # saml_env should not raise. Pending to update this code once
-        # the next Django 12 factor PR is merged, and maybe set the
+        # the next paas-app-charmer PR is merged, and maybe set the
         # unit to blocked if for any reason the saml integration data
         # is wrong.
         if x509certs:
@@ -129,16 +129,16 @@ class DjangoCharm(xiilib.django.Charm):
     def _on_s3_credential_changed(self, _: CredentialsChangedEvent) -> None:
         """Handle event for S3 Credentials Changed.
 
-        This should disappear/get updated once Django 12
-        factor supports the S3 integration.
+        This should disappear/get updated once paas-app-charmer
+        project supports the S3 integration.
         """
         self.reconcile()
 
     def _on_s3_credential_gone(self, _: CredentialsGoneEvent) -> None:
         """Handle event for S3 Credentials Gone.
 
-        This should disappear/get updated once Django 12
-        factor supports the S3 integration.
+        This should disappear/get updated once paas-app-charmer
+        project supports the S3 integration.
         """
         self.reconcile()
 
@@ -156,7 +156,7 @@ class DjangoCharm(xiilib.django.Charm):
 
     def reconcile(self) -> None:
         """Reconcile all services."""
-        # This is an interesting situation for the Django 12 factor project,
+        # This is an interesting situation for the paas-app-charmer project,
         # as this missing integration (if required) should block the charm,
         # as it can mean losing data.
         try:
@@ -206,7 +206,7 @@ class DjangoCharm(xiilib.django.Charm):
     def workload(self) -> ops.Container:
         """Get workload container.
 
-        Delete this function when it is in the django 12 factor project.
+        Delete this function when it is in the paas-app-charmer project.
 
         Returns:
            Workload Container
@@ -225,13 +225,14 @@ class DjangoCharm(xiilib.django.Charm):
         Returns:
            Full layer for netbox-rq
         """
-        # As super.reconcile sets to override "replace" to all services in
-        # the base layer in the rockcraft.yaml, we need to include the
-        # full service here, and not in rockcraft.yaml.
-        # Once NetBox is integrated with the new Django 12 factor, review
-        # it to see if it would be better to put it in the rockcraft.yaml
-        # and set "override: merge" instead here. In that case, we should
-        # just set the env variables here.
+        # As super.reconcile sets to override "replace" to all
+        # services in the base layer in the rockcraft.yaml, we need to
+        # include the full service here, and not in rockcraft.yaml.
+        # Once NetBox is integrated with the new paas-app-charmer
+        # project, review it to see if it would be better to put it in
+        # the rockcraft.yaml and set "override: merge" instead
+        # here. In that case, we should just set the env variables
+        # here.
         layer: ops.pebble.LayerDict = {
             "services": {
                 "netbox-rq": {
@@ -240,7 +241,7 @@ class DjangoCharm(xiilib.django.Charm):
                     "startup": "enabled",
                     "command": "/bin/python3 manage.py rqworker high default low",
                     # This probably should not be hardcoded. Update it when we
-                    # use the final Django 12 factor.
+                    # use the final paas-app-charmer project.
                     "working-dir": str(self._BASE_DIR / "app"),
                     "environment": self.gen_env(),
                     "user": "_daemon_",
@@ -252,7 +253,7 @@ class DjangoCharm(xiilib.django.Charm):
     def _on_create_super_user_action(self, event: ops.ActionEvent) -> None:
         """Create a superuser in Django.
 
-        This should be deleted once we integrate with the Django 12 factor.
+        This should be deleted once we integrate with the paas-app-charmer project.
 
         Args:
             event: the action event.

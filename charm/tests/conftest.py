@@ -1,7 +1,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Fixtures for NetBox charm tests."""
+"""Fixtures for the NetBox charm tests."""
 
 from pytest import Parser
 
