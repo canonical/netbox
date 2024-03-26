@@ -18,7 +18,6 @@ For DevOps or SRE teams this charm will make operating NetBox simple
 and straightforward through Juju's clean interface. It will allow easy
 deployment into multiple environments for testing of changes.
 
-
 ## Limitations
 
 The NetBox charm is designed for a high availability (HA) deployment. 
