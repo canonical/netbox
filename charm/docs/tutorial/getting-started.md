@@ -5,7 +5,7 @@
 - Use an external Redis server
 - Integrate with the PostgreSQL K8s charm.
 - Integrate with S3 for storage.
-- Expose NetBox charm with Traefik k8s.
+- Expose the NetBox charm with Traefik k8s.
 - Create a super user.
 
 Through the process, you'll verify the workload state, and log in to
@@ -31,7 +31,7 @@ juju add-model netbox-tutorial
 
 ## Deploy the NetBox charm
 
-Deploy NetBox charm, with all its mandatory requirements (PostgreSQL, redis and S3).
+Deploy the NetBox charm, with all its mandatory requirements (PostgreSQL, redis and S3).
 
 ### Deploy the charms:
 ```

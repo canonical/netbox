@@ -10,12 +10,11 @@ of the functionalities needed by this charm like:
 
 For the static assets, gunicorn is used with the help of the WhiteNoiseMiddleware.
 
-There is only one container for each unit of NetBox, that runs the next 
+There is only one container for each unit of NetBox, that runs the following
 services managed by Pebble:
 - django. Runs gunicorn.
 - cron. Cron service that runs management commands for housekeeping and syncdatasource.
 - statsd_exporter. To expose gunicorn metrics.
-
 
 Besides the integrations provided directly by the paas-app-charmer toolchain, the next
 integrations are implemented in NetBox:
@@ -25,6 +24,6 @@ integrations are implemented in NetBox:
 Currently Redis is configured using environment variables. This will be updated
 to a Redis integration.
 
-NetBox charm is designed for a fully high availability (HA) environment, and many 
+The NetBox charm is designed for a fully high availability (HA) environment, and many
 instances can be run for it. See [Configure Scripts and Reports for HA](../how-to/configure-scripts-reports.md)
 for the requirements to use scripts and reports in this HA configuration.

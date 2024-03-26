@@ -1,7 +1,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Integration tests NetBox charm."""
+"""Integration tests for the NetBox charm."""
 import logging
 import secrets
 import string

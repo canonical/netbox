@@ -1,7 +1,7 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-"""Unit tests for NetBox charm."""
+"""Unit tests for the NetBox charm."""
 
 from secrets import token_hex
 

@@ -111,7 +111,7 @@ the configuration option `django_allowed_hosts` like:
 juju config django_allowed_hosts='*'
 ```
 
-NetBox charm requires a postgresql_client interface to work.
+The NetBox charm requires a postgresql_client interface to work.
 Thanks to Juju, this can be easily configured with:
 ```bash
 juju deploy postgresql-k8s --channel 14/stable --trust
