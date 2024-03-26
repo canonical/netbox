@@ -20,8 +20,8 @@ extensions:
     - django-framework
 
 parts:
-    # NetBox project does not suit the 12 factor project yet.
-    # Until 12 factor django project supports the NetBox
+    # NetBox project does not suit the paas-app-charmer project yet.
+    # Until paas-app-charmer project supports the NetBox
     # directory organisation, this changes are needed.
     django-framework/install-app:
         prime:

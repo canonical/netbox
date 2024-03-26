@@ -1,14 +1,14 @@
 # NetBox charm architecture
 
 The NetBox charm initial version has been generated with the 
-help of the 12 Factor Project. The 12 Factor Project provides many 
+help of the paas-app-charmer project. The paas-app-charmer project provides many
 of the functionalities needed by this charm like:
 - PostgreSQL integration
 - Django migrations
 - Ingress integration
 - COS (Prometheus metrics and Loki logs for gunicorn).
 
-For the static assets, gunicorn is used with the help of the  WhiteNoiseMiddleware.
+For the static assets, gunicorn is used with the help of the WhiteNoiseMiddleware.
 
 There is only one container for each unit of NetBox, that runs the next 
 services managed by Pebble:
@@ -17,7 +17,7 @@ services managed by Pebble:
 - statsd_exporter. To expose gunicorn metrics.
 
 
-Besides the integrations provided directly by the 12 Factor project, the next
+Besides the integrations provided directly by the paas-app-charmer toolchain, the next
 integrations are implemented in NetBox:
 - SAML integration.
 - S3 integration.

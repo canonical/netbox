@@ -3,17 +3,6 @@
 [![Promote charm](https://github.com/canonical/netbox/actions/workflows/promote_charm.yaml/badge.svg)](https://github.com/canonical/netbox/actions/workflows/promote_charm.yaml)
 [![Discourse Status](https://img.shields.io/discourse/status?server=https%3A%2F%2Fdiscourse.charmhub.io&style=flat&label=CharmHub%20Discourse)](https://discourse.charmhub.io)
 
-
-<!--
-Avoid using this README file for information that is maintained or published elsewhere, e.g.:
-
-* metadata.yaml > published on Charmhub
-* documentation > published on (or linked to from) Charmhub
-* detailed contribution guide > documentation or CONTRIBUTING.md
-
-Use links instead.
--->
-
 # NetBox charm operator
 
 A Juju charm deploying and managing NetBox on Kubernetes.
@@ -39,8 +28,6 @@ and straightforward through Juju's clean interface. It will allow easy
 deployment into multiple environments for testing of changes.
 
 ## Other resources
-
-<!-- If your charm is documented somewhere else other than Charmhub, provide a link separately. -->
 
 - [Netbox upstream repository](https://github.com/netbox-community/netbox)
 

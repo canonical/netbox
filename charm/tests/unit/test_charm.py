@@ -22,7 +22,7 @@ def test_charm_blocked_without_s3_storage(harness: Harness):
     # This test depends on the order set by the reconcile function.
     # If the S3 order is changed, all other required integrations should be set,
     # like for example the database. They are not set here by default as
-    # testing the Django 12 factor project is not necessary.
+    # testing the paas-app-charmer project is not necessary.
     # The happy path, S3 configured and working, is tested with an
     # integration test.
     harness.begin_with_initial_hooks()
