@@ -31,7 +31,7 @@ juju add-model netbox-tutorial
 
 ## Deploy the NetBox charm
 
-Deploy the NetBox charm, with all its mandatory requirements (PostgreSQL, redis and S3).
+Deploy the NetBox charm, with all its mandatory requirements (PostgreSQL, Redis and S3).
 
 ### Deploy the charms:
 ```

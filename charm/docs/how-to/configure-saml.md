@@ -6,7 +6,7 @@ more information in [charmhub](https://charmhub.io/saml-integrator).
 SAML is configured in NetBox using the library `python-social-core` with the SAMLAuth backend.
 
 To configure it, you need to know the `entidy_id` and `metadata_url` of your IdP provider. 
-`entity_id` must be a valir URI. It can be configured with the next commands:
+`entity_id` must be a valid URI. It can be configured with the following commands:
 ```
 juju deploy saml-integrator --channel latest/edge --config entity_id=<idp_entidy_id> --config metadata_url=<idp_metadata_url>
 juju integrate saml-integrator netbox
