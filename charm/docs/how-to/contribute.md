@@ -102,7 +102,7 @@ be set using configuration options, like:
 juju config netbox redis_hostname=<redis_hostname>
 ```
 
-NetBox is built using django. It is necessary to set the 
+NetBox is built using Django. It is necessary to set the
 allowed hosts for it to work. For development (not recommended
 for production environments), you can allow all hosts using
 the configuration option `django_allowed_hosts` like:
