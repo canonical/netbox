@@ -9,15 +9,15 @@ enhancements to the NetBox operator.
 [opening an issue](https://github.com/canonical/netbox/issues)
 explaining your use case.
 - If you would like to chat with us about your use-cases or proposed
-implementation, you can reach us at [Canonical Mattermost public channel](https://chat.charmhub.io/charmhub/channels/charm-dev)
+implementation, you can reach us at [Canonical Matrix public channel](https://matrix.to/#/#charmhub-charmdev:ubuntu.com)
 or [Discourse](https://discourse.charmhub.io/).
 - Familiarising yourself with the [Charmed Operator Framework](https://juju.is/docs/sdk)
 library will help you a lot when working on new features or bug fixes.
 - All enhancements require review before being merged. Code review typically
-examines
+examines:
   - code quality
   - test coverage
-  - user experience for Juju operators of this charm.
+  - user experience for Juju operators of this charm
 - Please help us out in ensuring easy to review branches by rebasing your pull
 request branch onto the `main` branch. This also avoids merge commits and
 creates a linear Git commit history.

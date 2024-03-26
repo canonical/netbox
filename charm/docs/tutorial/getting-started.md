@@ -68,14 +68,13 @@ Configure NetBox using the previous admin password:
 juju config netbox redis_hostname=redis-k8s-0.redis-k8s-endpoints redis_password=<admin_password>
 ```
 
+### Deploy PostgreSQL
 
-### Deploy Postgresql
-
+NetBox requires PostgreSQL to work. Deploy and integrate with:
 ```
 juju deploy postgresql-k8s --channel 14/stable --trust
 juju integrate postgresql-k8s netbox
 ```
-
 
 ### Deploy s3-integrator
 
