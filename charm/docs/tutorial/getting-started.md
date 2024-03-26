@@ -38,8 +38,8 @@ Deploy the NetBox charm, with all its mandatory requirements (PostgreSQL, Redis 
 juju deploy netbox
 ```
 
-At this point netbox should be blocked as there it no S3 integration for
-storage, Redis nor PostgreSQL.
+At this point NetBox should be blocked as there is no S3 integration for
+storage, Redis or PostgreSQL.
 
 Set the allowed hosts. In this example every host is allowed. For a production environment
 only the used hosts should be allowed.
