@@ -24,8 +24,8 @@ integrations are implemented in NetBox:
 Currently Redis is configured using environment variables. This will be updated
 to use a Redis integration.
 
-The NetBox charm is designed for a high availability (HA) environment
-with many NetBox running instances providing HA. See [Configure
-Scripts and Reports for HA](../how-to/configure-scripts-reports.md)
-for the requirements to use scripts and reports in this HA
-configuration.
+The NetBox charm is designed for a high availability (HA) environment.
+The NetBox application can be scaled to more than one unit to provide
+HA. See [Configure Scripts and Reports for
+HA](../how-to/configure-scripts-reports.md) for the requirements to
+use scripts and reports in HA configuration.
