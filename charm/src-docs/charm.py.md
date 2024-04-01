@@ -112,7 +112,7 @@ s3_env() → dict[str, str]
 
 Environment variables for S3 for storage. 
 
-This should disappear/get updated once Django 12 factor supports the S3 integration. 
+This should disappear/get updated once paas-app-charmer project supports the S3 integration. 
 
 
 
@@ -148,7 +148,7 @@ workload() → Container
 
 Get workload container. 
 
-Delete this function when it is in the django 12 factor project. 
+Delete this function when it is in the paas-app-charmer project. 
 
 
 
@@ -185,7 +185,7 @@ Translates s3_uri_style to AWS addressing_style.
 
 ---
 
-<a href="../../charm/src/charm.py#L313"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L314"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `to_env`
 
