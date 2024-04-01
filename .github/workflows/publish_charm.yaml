@@ -15,4 +15,3 @@ jobs:
       channel: latest/edge
       docs-working-directory: "./charm"
       charm-working-directory: "./charm"
-
