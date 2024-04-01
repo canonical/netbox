@@ -95,7 +95,7 @@ juju deploy ./charm/netbox_ubuntu-22.04-amd64.charm \
 
 ### Configure NetBox
 
-NetBox required a Redis server to work correctly. This can
+NetBox requires a Redis server to work correctly. This can
 be set using configuration options, like:
 
 ```bash

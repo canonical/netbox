@@ -1,8 +1,9 @@
 # NetBox charm architecture
 
-The NetBox charm initial version has been generated with the 
-help of the paas-app-charmer project. The paas-app-charmer project provides many
-of the functionalities needed by this charm like:
+The NetBox charm initial version has been generated with the help of
+the [paas-app-charmer](https://github.com/canonical/paas-app-charmer/)
+project. [The paas-app-charmer](https://github.com/canonical/paas-app-charmer/)
+project provides many of the functionalities needed by this charm like:
 - PostgreSQL integration
 - Django migrations
 - Ingress integration
@@ -10,7 +11,7 @@ of the functionalities needed by this charm like:
 
 For the static assets, gunicorn is used with the help of the [WhiteNoiseMiddleware](https://whitenoise.readthedocs.io/en/stable/index.html).
 
-There is only one container for each unit of NetBox, that runs the following
+There is only one container for each unit of NetBox that runs the following
 services managed by Pebble:
 - django. Runs gunicorn.
 - cron. Cron service that runs management commands for housekeeping and syncdatasource.

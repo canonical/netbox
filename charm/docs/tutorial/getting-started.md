@@ -78,8 +78,10 @@ juju integrate postgresql-k8s netbox
 
 ### Deploy s3-integrator
 
-NetBox requires a S3 integration for the uploaded files. This is because
+NetBox requires an S3 integration for the uploaded files. This is because
 the NetBox charm is designed to work in a high availability (HA) configuration.
+This allows uploaded images to be placed on an S3 compatible server instead of
+the local filesystem.
 
 You can configure it with:
 ```
