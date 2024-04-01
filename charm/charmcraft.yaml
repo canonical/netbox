@@ -24,11 +24,14 @@ description: |
     to legacy IPAM and DCIM applications, NetBox provides a cohesive,
     extensive, and accessible data model for all things networked.
 
+links:
+  documentation: https://discourse.charmhub.io/t/netbox-documentation-overview/13564
+
 extensions:
   - django-framework
 
 actions:
-  # This action should be deleted once the last django 12 factor
+  # This action should be deleted once the last paas-app-charmer project
   # version is used, as it will be there
   create-super-user:
     description: Create a super user
@@ -41,6 +44,9 @@ requires:
   postgresql:
     interface: postgresql_client
     limit: 1
+  storage:
+    interface: s3
+    limit: 1
   saml:
     interface: saml
     limit: 1
@@ -51,24 +57,24 @@ config:
     redis_hostname:
       description: |-
         Redis hostname.
-        Will be replaced by the redis integration when 12 factor implements it.
+        Will be replaced by the redis integration when paas-app-charmer project implements it.
       type: string
     redis_port:
       description: |-
         Redis port.
-        Will be replaced by the redis integration when 12 factor implements it.
+        Will be replaced by the redis integration when paas-app-charmer project implements it.
       type: int
       default: 6379
     redis_username:
       description: |-
         Redis username.
-        Will be replaced by the redis integration when 12 factor implements it.
+        Will be replaced by the redis integration when paas-app-charmer project implements it.
       type: string
       default: ''
     redis_password:
       description: |-
         Redis password.
-        Will be replaced by the redis integration when 12 factor implements it.
+        Will be replaced by the redis integration when paas-app-charmer project implements it.
       type: string
       default: ''
     saml_sp_entity_id:
@@ -78,9 +84,9 @@ config:
     saml_username:
       description: |-
         SAML attribute used for both the social uid and the username.
-        NameID can be used setting this config to 'name_id'.
+        NameID can be used setting this config to 'name.
       type: string
-      default: 'name_id'
+      default: 'name'
     saml_email:
       description: |-
         SAML attribute used for the email.
