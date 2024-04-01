@@ -84,9 +84,9 @@ config:
     saml_username:
       description: |-
         SAML attribute used for both the social uid and the username.
-        NameID can be used setting this config to 'name_id'.
+        NameID can be used setting this config to 'name.
       type: string
-      default: 'name_id'
+      default: 'name'
     saml_email:
       description: |-
         SAML attribute used for the email.
