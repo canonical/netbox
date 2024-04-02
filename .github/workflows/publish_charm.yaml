@@ -15,3 +15,5 @@ jobs:
       channel: latest/edge
       docs-working-directory: "./charm"
       charm-working-directory: "./charm"
+      charmcraft-repository: weiiwang01/charmcraft
+      charmcraft-ref: feat-12f-django
