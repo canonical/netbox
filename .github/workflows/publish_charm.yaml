@@ -413,6 +413,7 @@ jobs:
           name: ${{ env.CHARM_NAME }}-charm
           path: ${{ env.working_directory }}
       - name: Get charm file
+        id: get-charm-file
         run: |
           set -x
           echo CHARM_NAME: -${{ env.CHARM_NAME }}-
@@ -423,6 +424,7 @@ jobs:
         env:
           CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "true"
           CHARMCRAFT_AUTH:  ${{ secrets.CHARMHUB_TOKEN }}
+          CHARM_FILE: ${{ steps.get-charm-file.outputs.CHARM_FILE }}
         run: |
           echo charm_file: $CHARM_FILE
           echo channel: $channel
