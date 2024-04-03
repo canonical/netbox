@@ -361,8 +361,10 @@ jobs:
           path: ${{ env.working_directory }}
       - name: Get charm file
         run: |
+          set -x
           echo CHARM_NAME: -${{ env.CHARM_NAME }}-
           ls
+          echo resolved: "CHARM_FILE=$(ls ${{ env.CHARM_NAME }}_*.charm)"
           echo "CHARM_FILE=$(ls ${{ env.CHARM_NAME }}_*.charm)" >> $GITHUB_OUTPUT
       - name: Upload charm to charmhub
         uses: canonical/charming-actions/upload-charm@2.5.0-rc
