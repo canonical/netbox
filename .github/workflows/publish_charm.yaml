@@ -262,14 +262,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Download images artifact
-        if: ${{ github.event_name == 'push' }}
+        # TODO ORIGINAL ONE if: ${{ github.event_name == 'push' }}
+        if: true
         run: |
           gh run download ${{ needs.get-run-id.outputs.run-id }} -R ${{ github.repository }} -n ${{ env.CHARM_NAME }}-images
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Download images artifact (for testing)
         uses: actions/download-artifact@v4
-        if: ${{ github.event_name == 'pull_request' }}
+        # TODO ORIGINAL ONE if: ${{ github.event_name == 'pull_request' }}
+        if: false
         with:
           name: ${{ env.CHARM_NAME }}-images
       - name: Publish image
