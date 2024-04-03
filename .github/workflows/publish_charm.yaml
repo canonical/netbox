@@ -171,7 +171,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Get images
-        working-directory: ${{ inputs.working-directory }}
+        working-directory: ${{ env.working_directory }}
         run: |
           lines=$(find . -type f -name rockcraft.yaml | wc -l)
           if [ $lines -ne 0 ]; then
@@ -325,17 +325,21 @@ jobs:
     if: ${{ !failure() }}
     steps:
       - uses: actions/checkout@v4.1.1
-      - if: inputs.charm-working-directory != ''
+      - if: env.charm_working_directory != ''
         name: Change directory
         run: |
+          set -x
+          ls
           TEMP_DIR=$(mktemp -d)
           cp -rp ./${{env.charm_working_directory}}/. $TEMP_DIR
           rm -rf .* * || :
           cp -rp $TEMP_DIR/. .
           rm -rf $TEMP_DIR
+          ls
       - name: Get charm name
         id: get-charm-name
         run: |
+          set -x
           CHARM_NAME="$([ -f metadata.yaml ] && yq '.name' metadata.yaml || echo UNKNOWN)"
           if [ "$CHARM_NAME" == "UNKNOWN" ]; then
             CHARM_NAME="$([ -f charmcraft.yaml ] && yq '.name' charmcraft.yaml || echo UNKNOWN)"
