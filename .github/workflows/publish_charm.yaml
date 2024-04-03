@@ -431,4 +431,4 @@ jobs:
           charmcraft resource-revisions netbox django-app-image
           MAX_REV=$(charmcraft resource-revisions netbox django-app-image --format=json | jq 'map( .revision) | max')
           echo max_rev ${MAX_REV}
-          charmcraft upload --format json --release ${channel} ${$CHARM_FILE} --resource=django-app-image:${MAX_REV}
+          charmcraft upload --format json --release ${channel} ${CHARM_FILE} --resource=django-app-image:${MAX_REV}
