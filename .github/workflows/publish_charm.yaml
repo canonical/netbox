@@ -162,96 +162,148 @@ jobs:
         shell: bash
         run: |
           echo "RUN_ID=8535324640" >> $GITHUB_ENV
-  # get-images:
-  #   name: Get images
-  #   runs-on: ubuntu-22.04
-  #   outputs:
-  #     images: ${{ env.IMAGES }}
-  #   steps:
-  #     - uses: actions/checkout@v4.1.1
-  #     - name: Get images
-  #       working-directory: ${{ inputs.working-directory }}
-  #       run: |
-  #         lines=$(find . -type f -name rockcraft.yaml | wc -l)
-  #         if [ $lines -ne 0 ]; then
-  #           IMAGES=$(find . -type f -name rockcraft.yaml | xargs -l yq '.name' | jq -Rsc '. / "\n" - [""]')
-  #         else
-  #           IMAGES=$(ls *.Dockerfile 2> /dev/null | sed s/\.Dockerfile// |  jq -Rsc '. / "\n" - [""]')
-  #         fi
-  #         echo "IMAGES=$IMAGES" >> $GITHUB_ENV
-  # publish-images:
-  #   name: Publish images to charmhub
-  #   runs-on: ${{ needs.get-runner-image.outputs.runs-on }}
-  #   needs: [ get-images, get-run-id, get-runner-image]
-  #   if: ${{ needs.get-images.outputs.images != '[]' }}
-  #   steps:
-  #     - uses: actions/checkout@v4.1.1
-  #     - if: inputs.working-directory != './'
-  #       name: Change directory
-  #       run: |
-  #         TEMP_DIR=$(mktemp -d)
-  #         cp -rp ${{inputs.working-directory}}/. $TEMP_DIR
-  #         rm -rf .* * || :
-  #         cp -rp $TEMP_DIR/. .
-  #         rm -rf $TEMP_DIR
-  #     - name: Install charmcraft
-  #       run: |
-  #         sudo snap install charmcraft --classic
-  #     - name: Get charm name
-  #       id: get-charm-name
-  #       run: |
-  #         CHARM_NAME="$([ -f metadata.yaml ] && yq '.name' metadata.yaml || echo UNKNOWN)"
-  #         if [ "$CHARM_NAME" == "UNKNOWN" ]; then
-  #           CHARM_NAME="$([ -f charmcraft.yaml ] && yq '.name' charmcraft.yaml || echo UNKNOWN)"
-  #         fi
-  #         echo "CHARM_NAME=$CHARM_NAME">> $GITHUB_ENV
-  #     - name: Log in to the Container registry
-  #       uses: docker/login-action@v3
-  #       with:
-  #         registry: ${{ env.REGISTRY }}
-  #         username: ${{ github.actor }}
-  #         password: ${{ secrets.GITHUB_TOKEN }}
-  #     - name: Download images artifact
-  #       if: ${{ github.event_name == 'push' }}
-  #       run: |
-  #         gh run download ${{ needs.get-run-id.outputs.run-id }} -R ${{ github.repository }} -n ${{ env.CHARM_NAME }}-images
-  #       env:
-  #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #     - name: Download images artifact (for testing)
-  #       uses: actions/download-artifact@v4
-  #       if: ${{ github.event_name == 'pull_request' }}
-  #       with:
-  #         name: ${{ env.CHARM_NAME }}-images
-  #     - name: Publish image
-  #       env:
-  #         CHARMCRAFT_AUTH:  ${{ secrets.CHARMHUB_TOKEN }}
-  #       run: |
-  #         charm=${{ env.CHARM_NAME }}
-  #         declare -a resources
-  #         declare -a images
+  get-images:
+    name: Get images
+    runs-on: ubuntu-22.04
+    outputs:
+      images: ${{ env.IMAGES }}
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - name: Get images
+        working-directory: ${{ inputs.working-directory }}
+        run: |
+          lines=$(find . -type f -name rockcraft.yaml | wc -l)
+          if [ $lines -ne 0 ]; then
+            IMAGES=$(find . -type f -name rockcraft.yaml | xargs -l yq '.name' | jq -Rsc '. / "\n" - [""]')
+          else
+            IMAGES=$(ls *.Dockerfile 2> /dev/null | sed s/\.Dockerfile// |  jq -Rsc '. / "\n" - [""]')
+          fi
+          echo "IMAGES=$IMAGES" >> $GITHUB_ENV
+  publish-images:
+    name: Publish images to charmhub
+    runs-on: ${{ needs.get-runner-image.outputs.runs-on }}
+    needs: [ get-images, get-run-id, get-runner-image]
+    if: ${{ needs.get-images.outputs.images != '[]' }}
+    steps:
+      - uses: actions/checkout@v4
+        if: env.charmcraft_repository != ''
+        with:
+          repository: ${{ env.charmcraft_repository }}
+          ref: ${{ env.charmcraft_ref }}
+          path: ./charmcraft
+          fetch-depth: 0
 
-  #         if [ -f metadata.yaml ]; then
-  #           for resource in $(yq -er '.resources | with_entries(select(.value.type=="oci-image")) | keys | join(" ")' metadata.yaml); do
-  #             resources+=("$resource")
-  #           done
-  #         else
-  #           for resource in $(yq -er '.resources | with_entries(select(.value.type=="oci-image")) | keys | join(" ")' charmcraft.yaml); do
-  #             resources+=("$resource")
-  #           done
-  #         fi
+      - name: Get Charmcraft SHA
+        if: env.charmcraft_repository != ''
+        id: charmcraft-sha
+        working-directory: ./charmcraft
+        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
-  #         for image in $(cat ${{ env.CHARM_NAME }}-images); do
-  #           images+=("$image")
-  #         done
+      - name: Restore Charmcraft Cache
+        if: env.charmcraft_repository != ''
+        id: restore-charmcraft
+        uses: actions/cache/restore@v4
+        with:
+          path: ./charmcraft*.snap
+          key: charmcraft-${{ steps.charmcraft-sha.outputs.sha }}
+
+      - name: Install Snapcraft
+        if: steps.restore-charmcraft.outputs.cache-hit != 'true' && env.charmcraft_repository != ''
+        run: sudo snap install snapcraft --classic
+
+      - name: Build Charmcraft
+        if: steps.restore-charmcraft.outputs.cache-hit != 'true' && env.charmcraft_repository != ''
+        working-directory: ./charmcraft
+        run: |
+          snapcraft --use-lxd
+          cp charmcraft*.snap ../
+
+      - name: Save Charmcraft Cache
+        uses: actions/cache/save@v4
+        if: steps.restore-charmcraft.outputs.cache-hit != 'true' && env.charmcraft_repository != ''
+        with:
+          path: ./charmcraft*.snap
+          key: ${{ steps.restore-charmcraft.outputs.cache-primary-key }}
+
+      - name: Install charmcraft
+        if: env.charmcraft_repository != ''
+        run: sudo snap install --dangerous --classic charmcraft*.snap
+
+      - name: Clean up
+        if: env.charmcraft_repository != ''
+        run: rm -rf *
+
+      - name: Install charmcraft
+        if: env.charmcraft_repository == ''
+        run: |
+          sudo snap install charmcraft --classic --channel ${{ env.charmcraft_channel }}
+  
+      - uses: actions/checkout@v4.1.1
+      - if: env.charm_working_directory != './'
+        name: Change directory
+        run: |
+          TEMP_DIR=$(mktemp -d)
+          cp -rp ${{env.charm_working_directory}}/. $TEMP_DIR
+          rm -rf .* * || :
+          cp -rp $TEMP_DIR/. .
+          rm -rf $TEMP_DIR
+      - name: Get charm name
+        id: get-charm-name
+        run: |
+          CHARM_NAME="$([ -f metadata.yaml ] && yq '.name' metadata.yaml || echo UNKNOWN)"
+          if [ "$CHARM_NAME" == "UNKNOWN" ]; then
+            CHARM_NAME="$([ -f charmcraft.yaml ] && yq '.name' charmcraft.yaml || echo UNKNOWN)"
+          fi
+          echo "CHARM_NAME=$CHARM_NAME">> $GITHUB_ENV
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download images artifact
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          gh run download ${{ needs.get-run-id.outputs.run-id }} -R ${{ github.repository }} -n ${{ env.CHARM_NAME }}-images
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download images artifact (for testing)
+        uses: actions/download-artifact@v4
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          name: ${{ env.CHARM_NAME }}-images
+      - name: Publish image
+        env:
+          CHARMCRAFT_AUTH:  ${{ secrets.CHARMHUB_TOKEN }}
+        run: |
+          set -x
+          charm=${{ env.CHARM_NAME }}
+          declare -a resources
+          declare -a images
+
+          if [ -f metadata.yaml ]; then
+            for resource in $(yq -er '.resources | with_entries(select(.value.type=="oci-image")) | keys | join(" ")' metadata.yaml); do
+              resources+=("$resource")
+            done
+          else
+            for resource in $(yq -er '.resources | with_entries(select(.value.type=="oci-image")) | keys | join(" ")' charmcraft.yaml); do
+              resources+=("$resource")
+            done
+          fi
+
+          for image in $(cat ${{ env.CHARM_NAME }}-images); do
+            images+=("$image")
+          done
           
-  #         for image in "${images[@]}"; do
-  #           resource=$(echo $image | awk -F '/' '{print $NF}' | cut -d ':' -f 1)-image
-  #           if [[ " ${resources[@]} " =~ " $resource " ]]; then
-  #             docker pull $image
-  #             image_id=$(docker images $image --format "{{.ID}}")
-  #             charmcraft upload-resource $charm $resource --image=$image_id --verbosity=brief
-  #           fi
-  #         done
+          for image in "${images[@]}"; do
+            resource=$(echo $image | awk -F '/' '{print $NF}' | cut -d ':' -f 1)-image
+            if [[ " ${resources[@]} " =~ " $resource " ]]; then
+              docker pull $image
+              image_id=$(docker images $image --format "{{.ID}}")
+              charmcraft upload-resource $charm $resource --image=$image_id --verbosity=brief
+            fi
+          done
+
   # publish-charm:
   #   name: Publish charm to ${{ inputs.channel }}
   #   runs-on: ${{ needs.get-runner-image.outputs.runs-on }}
