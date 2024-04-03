@@ -13,11 +13,11 @@ env:
   OWNER: ${{ github.repository_owner }}
   REGISTRY: ghcr.io
   channel: latest/edge
-  charm-working-directory: "./charm"
-  charmcraft-ref: feat-12f-django
-  charmcraft-repository: weiiwang01/charmcraft
-  tag-prefix:
-  working-directory: "./"
+  charm_working_directory: "./charm"
+  charmcraft_ref: feat-12f-django
+  charmcraft_repository: weiiwang01/charmcraft
+  tag_prefix:
+  working_directory: "./"
 
 jobs:
   branch-up-to-date-check-enabled:
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-22.04
     defaults:
       run:
-        working-directory: ${{ env.charm-working-directory || env.working-directory }}
+        working-directory: ${{ env.charm_working_directory || env.working_directory }}
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Search for docs folder
@@ -58,23 +58,23 @@ jobs:
           discourse_api_key: ${{ secrets.DISCOURSE_API_KEY }}
           dry_run: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          charm_dir:  ${{ env.charm-working-directory || env.working-directory }}
+          charm_dir:  ${{ env.charm_working_directory || env.working_directory }}
   get-runner-image:
     name: Get runner image
     uses: canonical/operator-workflows/.github/workflows/get_runner_image.yaml@test-netbox
     with:
-      working-directory: ${{ env.charm-working-directory || env.working-directory }}
+      working-directory: ${{ env.charm_working_directory || env.working_directory }}
   release-charm-libs:
     name: Release charm libs
     needs: [ branch-up-to-date-check-enabled ]
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4.1.1
-      - if: env.charm-working-directory != ''
+      - if: env.charm_working_directory != ''
         name: Change directory
         run: |
           TEMP_DIR=$(mktemp -d)
-          cp -rp ${{env.charm-working-directory}}/. $TEMP_DIR
+          cp -rp ${{env.charm_working_directory}}/. $TEMP_DIR
           rm -rf .* * || :
           cp -rp $TEMP_DIR/. .
           rm -rf $TEMP_DIR
