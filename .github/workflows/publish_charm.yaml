@@ -302,7 +302,11 @@ jobs:
           echo images: -"${images[@]}"-
           
           for image in "${images[@]}"; do
-            resource=$(echo $image | awk -F '/' '{print $NF}' | cut -d ':' -f 1)-image
+            resource_name=$(echo $image | awk -F '/' '{print $NF}' | cut -d ':' -f 1)
+            if [[ ${resource_name} == ${CHARM_NAME} ]] && [[ " ${resources[@]} " =~ " django-app-image " ]]; then
+                resource_name=django-app
+            fi
+            resource=${resource_name}-image
             echo resource: -"${resource}"-
             if [[ " ${resources[@]} " =~ " $resource " ]]; then
               docker pull $image
