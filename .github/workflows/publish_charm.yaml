@@ -82,7 +82,7 @@ jobs:
         name: Change directory
         run: |
           TEMP_DIR=$(mktemp -d)
-          cp -rp ${{env.charm_working_directory}}/. $TEMP_DIR
+          cp -rp ./${{env.charm_working_directory}}/. $TEMP_DIR
           rm -rf .* * || :
           cp -rp $TEMP_DIR/. .
           rm -rf $TEMP_DIR
@@ -239,11 +239,11 @@ jobs:
           sudo snap install charmcraft --classic --channel ${{ env.charmcraft_channel }}
   
       - uses: actions/checkout@v4.1.1
-      - if: env.charm_working_directory != './'
+      - if: env.charm_working_directory != ''
         name: Change directory
         run: |
           TEMP_DIR=$(mktemp -d)
-          cp -rp ${{env.charm_working_directory}}/. $TEMP_DIR
+          cp -rp ./${{env.charm_working_directory}}/. $TEMP_DIR
           rm -rf .* * || :
           cp -rp $TEMP_DIR/. .
           rm -rf $TEMP_DIR
@@ -318,17 +318,17 @@ jobs:
           done
 
   publish-charm:
-    name: Publish charm to ${{ inputs.channel }}
+    name: Publish charm to ${{ env.channel }}
     runs-on: ${{ needs.get-runner-image.outputs.runs-on }}
     needs: [get-run-id, get-runner-image, publish-images]
     if: ${{ !failure() }}
     steps:
       - uses: actions/checkout@v4.1.1
-      - if: inputs.charm-working-directory != './'
+      - if: inputs.charm-working-directory != ''
         name: Change directory
         run: |
           TEMP_DIR=$(mktemp -d)
-          cp -rp ${{inputs.charm-working-directory}}/. $TEMP_DIR
+          cp -rp ./${{env.charm_working_directory}}/. $TEMP_DIR
           rm -rf .* * || :
           cp -rp $TEMP_DIR/. .
           rm -rf $TEMP_DIR
@@ -353,7 +353,7 @@ jobs:
         if: true
         with:
           name: ${{ env.CHARM_NAME }}-charm
-          path: ${{ inputs.working-directory }}
+          path: ${{ env.working_directory }}
       - name: Get charm file
         run: echo "CHARM_FILE=$(ls ${{ env.CHARM_NAME }}_*.charm)" >> $GITHUB_OUTPUT
       - name: Upload charm to charmhub
@@ -362,6 +362,6 @@ jobs:
           built-charm-path: ${{ env.CHARM_FILE }}
           credentials: ${{ secrets.CHARMHUB_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          channel: ${{ inputs.channel }}
-          tag-prefix: ${{ inputs.tag-prefix }}
+          channel: ${{ env.channel }}
+          tag-prefix: ${{ env.tag_prefix }}
           upload-image: false
