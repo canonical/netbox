@@ -369,7 +369,8 @@ jobs:
       - name: Upload charm to charmhub
         uses: canonical/charming-actions/upload-charm@2.5.0-rc
         with:
-          built-charm-path: ${{ env.CHARM_FILE }}
+          # TODO RESTORE built-charm-path: ${{ env.CHARM_FILE }}
+          built-charm-path: "netbox_ubuntu-22.04-amd64.charm"
           credentials: ${{ secrets.CHARMHUB_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           channel: ${{ env.channel }}
