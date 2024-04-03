@@ -288,17 +288,21 @@ jobs:
               resources+=("$resource")
             done
           else
-            for resource in $(yq -er '.resources | with_entries(select(.value.type=="oci-image")) | keys | join(" ")' charmcraft.yaml); do
+            for resource in $(yq -er '.resources | with_entries(select(.value.type=="oci-image")) | keys | join(" ")' <(charmcraft expand-extensions)); do
               resources+=("$resource")
             done
           fi
-
+          
           for image in $(cat ${{ env.CHARM_NAME }}-images); do
             images+=("$image")
           done
+
+          echo resources: -"${resources[@]}"-
+          echo images: -"${images[@]}"-
           
           for image in "${images[@]}"; do
             resource=$(echo $image | awk -F '/' '{print $NF}' | cut -d ':' -f 1)-image
+            echo resource: -"${resource}"-
             if [[ " ${resources[@]} " =~ " $resource " ]]; then
               docker pull $image
               image_id=$(docker images $image --format "{{.ID}}")
