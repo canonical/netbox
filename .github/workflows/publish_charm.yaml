@@ -100,7 +100,8 @@ jobs:
     steps:
       - name: Get workflow run id
         # TODO THIS IS THE CORRECT ONE if: ${{ github.event_name == 'push' }}
-        if: ${{ github.event_name == 'push'  || github.event_name == 'pull_request' }}
+        # if: ${{ github.event_name == 'push'  || github.event_name == 'pull_request' }}
+        if: false
         shell: bash
         run: |
           # Get commit info
@@ -135,7 +136,7 @@ jobs:
                   | select(.path == \".github/workflows/integration_test.yaml\")
                   | select(.head_commit.tree_id == \"$TREE_SHA\")
                 ] | max_by(.updated_at) | .id"
-              )
+                )
            
               if [[ -n $RESULT ]]; then
                   RUN_ID=$RESULT
@@ -157,6 +158,10 @@ jobs:
         shell: bash
         run: |
           echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
+      - name: TODO REMOVE THIS Get current run id
+        shell: bash
+        run: |
+          echo "RUN_ID=8535324640" >> $GITHUB_ENV
   # get-images:
   #   name: Get images
   #   runs-on: ubuntu-22.04
