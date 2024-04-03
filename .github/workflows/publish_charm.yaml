@@ -355,7 +355,7 @@ jobs:
       - name: Download charm artifact (for testing)
         uses: actions/download-artifact@v4
         # TODO ORIGINAL VALUE if: ${{ github.event_name == 'pull_request' }}
-        if: true
+        if: false
         with:
           name: ${{ env.CHARM_NAME }}-charm
           path: ${{ env.working_directory }}
