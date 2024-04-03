@@ -303,6 +303,8 @@ jobs:
           
           for image in "${images[@]}"; do
             resource_name=$(echo $image | awk -F '/' '{print $NF}' | cut -d ':' -f 1)
+            # This is for paas-app-charmer for Django, as the main image name is named "django-app-image" and
+            # should match the main rockcraft.yaml.
             if [[ ${resource_name} == ${CHARM_NAME} ]] && [[ " ${resources[@]} " =~ " django-app-image " ]]; then
                 resource_name=django-app
             fi
@@ -315,49 +317,51 @@ jobs:
             fi
           done
 
-  # publish-charm:
-  #   name: Publish charm to ${{ inputs.channel }}
-  #   runs-on: ${{ needs.get-runner-image.outputs.runs-on }}
-  #   needs: [get-run-id, get-runner-image, publish-images]
-  #   if: ${{ !failure() }}
-  #   steps:
-  #     - uses: actions/checkout@v4.1.1
-  #     - if: inputs.working-directory != './'
-  #       name: Change directory
-  #       run: |
-  #         TEMP_DIR=$(mktemp -d)
-  #         cp -rp ${{inputs.working-directory}}/. $TEMP_DIR
-  #         rm -rf .* * || :
-  #         cp -rp $TEMP_DIR/. .
-  #         rm -rf $TEMP_DIR
-  #     - name: Get charm name
-  #       id: get-charm-name
-  #       run: |
-  #         CHARM_NAME="$([ -f metadata.yaml ] && yq '.name' metadata.yaml || echo UNKNOWN)"
-  #         if [ "$CHARM_NAME" == "UNKNOWN" ]; then
-  #           CHARM_NAME="$([ -f charmcraft.yaml ] && yq '.name' charmcraft.yaml || echo UNKNOWN)"
-  #         fi
-  #         echo "CHARM_NAME=$CHARM_NAME">> $GITHUB_ENV
-  #     - name: Download charm artifact
-  #       if: ${{ github.event_name == 'push' }}
-  #       run: |
-  #         gh run download ${{ needs.get-run-id.outputs.run-id }} -R ${{ github.repository }} -n ${{ env.CHARM_NAME }}-charm
-  #       env:
-  #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #     - name: Download charm artifact (for testing)
-  #       uses: actions/download-artifact@v4
-  #       if: ${{ github.event_name == 'pull_request' }}
-  #       with:
-  #         name: ${{ env.CHARM_NAME }}-charm
-  #         path: ${{ inputs.working-directory }}
-  #     - name: Get charm file
-  #       run: echo "CHARM_FILE=$(ls ${{ env.CHARM_NAME }}_*.charm)" >> $GITHUB_OUTPUT
-  #     - name: Upload charm to charmhub
-  #       uses: canonical/charming-actions/upload-charm@2.5.0-rc
-  #       with:
-  #         built-charm-path: ${{ env.CHARM_FILE }}
-  #         credentials: ${{ secrets.CHARMHUB_TOKEN }}
-  #         github-token: ${{ secrets.GITHUB_TOKEN }}
-  #         channel: ${{ inputs.channel }}
-  #         tag-prefix: ${{ inputs.tag-prefix }}
-  #         upload-image: false
+  publish-charm:
+    name: Publish charm to ${{ inputs.channel }}
+    runs-on: ${{ needs.get-runner-image.outputs.runs-on }}
+    needs: [get-run-id, get-runner-image, publish-images]
+    if: ${{ !failure() }}
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - if: inputs.charm-working-directory != './'
+        name: Change directory
+        run: |
+          TEMP_DIR=$(mktemp -d)
+          cp -rp ${{inputs.charm-working-directory}}/. $TEMP_DIR
+          rm -rf .* * || :
+          cp -rp $TEMP_DIR/. .
+          rm -rf $TEMP_DIR
+      - name: Get charm name
+        id: get-charm-name
+        run: |
+          CHARM_NAME="$([ -f metadata.yaml ] && yq '.name' metadata.yaml || echo UNKNOWN)"
+          if [ "$CHARM_NAME" == "UNKNOWN" ]; then
+            CHARM_NAME="$([ -f charmcraft.yaml ] && yq '.name' charmcraft.yaml || echo UNKNOWN)"
+          fi
+          echo "CHARM_NAME=$CHARM_NAME">> $GITHUB_ENV
+      - name: Download charm artifact
+        # TODO THIS WAS BEFORE... if: ${{ github.event_name == 'push' }}
+        if: true
+        run: |
+          gh run download ${{ needs.get-run-id.outputs.run-id }} -R ${{ github.repository }} -n ${{ env.CHARM_NAME }}-charm
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download charm artifact (for testing)
+        uses: actions/download-artifact@v4
+        # TODO ORIGINAL VALUE if: ${{ github.event_name == 'pull_request' }}
+        if: true
+        with:
+          name: ${{ env.CHARM_NAME }}-charm
+          path: ${{ inputs.working-directory }}
+      - name: Get charm file
+        run: echo "CHARM_FILE=$(ls ${{ env.CHARM_NAME }}_*.charm)" >> $GITHUB_OUTPUT
+      - name: Upload charm to charmhub
+        uses: canonical/charming-actions/upload-charm@2.5.0-rc
+        with:
+          built-charm-path: ${{ env.CHARM_FILE }}
+          credentials: ${{ secrets.CHARMHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          channel: ${{ inputs.channel }}
+          tag-prefix: ${{ inputs.tag-prefix }}
+          upload-image: false
