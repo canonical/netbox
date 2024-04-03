@@ -59,11 +59,11 @@ jobs:
           dry_run: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
           charm_dir:  ${{ env.charm_working_directory || env.working_directory }}
-  # get-runner-image:
-  #   name: Get runner image
-  #   uses: canonical/operator-workflows/.github/workflows/get_runner_image.yaml@test-netbox
-  #   with:
-  #     working-directory: ${{ env.charm_working_directory || env.working_directory }}
+  get-runner-image:
+    name: Get runner image
+    uses: canonical/operator-workflows/.github/workflows/get_runner_image.yaml@test-netbox
+    with:
+      working-directory:  ${{ env.charm_working_directory || env.working_directory }}
   # release-charm-libs:
   #   name: Release charm libs
   #   needs: [ branch-up-to-date-check-enabled ]
