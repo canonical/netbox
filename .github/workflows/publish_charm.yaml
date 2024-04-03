@@ -324,6 +324,59 @@ jobs:
     needs: [get-run-id, get-runner-image, publish-images, vars]
     if: ${{ !failure() }}
     steps:
+      - uses: actions/checkout@v4
+        if: env.charmcraft_repository != ''
+        with:
+          repository: ${{ env.charmcraft_repository }}
+          ref: ${{ env.charmcraft_ref }}
+          path: ./charmcraft
+          fetch-depth: 0
+
+      - name: Get Charmcraft SHA
+        if: env.charmcraft_repository != ''
+        id: charmcraft-sha
+        working-directory: ./charmcraft
+        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Restore Charmcraft Cache
+        if: env.charmcraft_repository != ''
+        id: restore-charmcraft
+        uses: actions/cache/restore@v4
+        with:
+          path: ./charmcraft*.snap
+          key: charmcraft-${{ steps.charmcraft-sha.outputs.sha }}
+
+      - name: Install Snapcraft
+        if: steps.restore-charmcraft.outputs.cache-hit != 'true' && env.charmcraft_repository != ''
+        run: sudo snap install snapcraft --classic
+
+      - name: Build Charmcraft
+        if: steps.restore-charmcraft.outputs.cache-hit != 'true' && env.charmcraft_repository != ''
+        working-directory: ./charmcraft
+        run: |
+          snapcraft --use-lxd
+          cp charmcraft*.snap ../
+
+      - name: Save Charmcraft Cache
+        uses: actions/cache/save@v4
+        if: steps.restore-charmcraft.outputs.cache-hit != 'true' && env.charmcraft_repository != ''
+        with:
+          path: ./charmcraft*.snap
+          key: ${{ steps.restore-charmcraft.outputs.cache-primary-key }}
+
+      - name: Install charmcraft
+        if: env.charmcraft_repository != ''
+        run: sudo snap install --dangerous --classic charmcraft*.snap
+
+      - name: Clean up
+        if: env.charmcraft_repository != ''
+        run: rm -rf *
+
+      - name: Install charmcraft
+        if: env.charmcraft_repository == ''
+        run: |
+          sudo snap install charmcraft --classic --channel ${{ env.charmcraft_channel }}
+  
       - uses: actions/checkout@v4.1.1
       - if: env.charm_working_directory != ''
         name: Change directory
@@ -367,12 +420,13 @@ jobs:
           echo resolved: "CHARM_FILE=$(ls ${{ env.CHARM_NAME }}_*.charm)"
           echo "CHARM_FILE=$(ls ${{ env.CHARM_NAME }}_*.charm)" >> $GITHUB_OUTPUT
       - name: Upload charm to charmhub
-        uses: canonical/charming-actions/upload-charm@2.5.0-rc
-        with:
-          # TODO RESTORE built-charm-path: ${{ env.CHARM_FILE }}
-          built-charm-path: "netbox_ubuntu-22.04-amd64.charm"
-          credentials: ${{ secrets.CHARMHUB_TOKEN }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          channel: ${{ env.channel }}
-          tag-prefix: ${{ env.tag_prefix }}
-          upload-image: false
+        env:
+          CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "true"
+          CHARMCRAFT_AUTH:  ${{ secrets.CHARMHUB_TOKEN }}
+        run: |
+          echo charm_file: $CHARM_FILE
+          echo channel: $channel
+          charmcraft resource-revisions netbox django-app-image
+          MAX_REV=$(charmcraft resource-revisions netbox django-app-image --format=json | jq 'map( .revision) | max')
+          echo max_rev ${MAX_REV}
+          charmcraft upload --format json --release ${channel} ${$CHARM_FILE} --resource=django-app-image:${MAX_REV}
