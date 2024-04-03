@@ -320,9 +320,8 @@ jobs:
 
   publish-charm:
     name: Publish charm to ${{ needs.vars.outputs.channel }}
-    needs: vars
     runs-on: ${{ needs.get-runner-image.outputs.runs-on }}
-    needs: [get-run-id, get-runner-image, publish-images]
+    needs: [get-run-id, get-runner-image, publish-images, vars]
     if: ${{ !failure() }}
     steps:
       - uses: actions/checkout@v4.1.1
