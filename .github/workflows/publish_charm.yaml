@@ -72,25 +72,25 @@ jobs:
     with:
       working-directory: ${{ needs.vars.outputs.charm_working_directory }}
     secrets: inherit
-  # release-charm-libs:
-  #   name: Release charm libs
-  #   needs: [ branch-up-to-date-check-enabled ]
-  #   runs-on: ubuntu-22.04
-  #   steps:
-  #     - uses: actions/checkout@v4.1.1
-  #     - if: env.charm_working_directory != ''
-  #       name: Change directory
-  #       run: |
-  #         TEMP_DIR=$(mktemp -d)
-  #         cp -rp ${{env.charm_working_directory}}/. $TEMP_DIR
-  #         rm -rf .* * || :
-  #         cp -rp $TEMP_DIR/. .
-  #         rm -rf $TEMP_DIR
-  #     - uses: canonical/charming-actions/release-libraries@2.5.0-rc
-  #       name: Release libs
-  #       with:
-  #         credentials: ${{ secrets.CHARMHUB_TOKEN }}
-  #         github-token: ${{ secrets.GITHUB_TOKEN }}
+  release-charm-libs:
+    name: Release charm libs
+    needs: [ branch-up-to-date-check-enabled ]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4.1.1
+      - if: env.charm_working_directory != ''
+        name: Change directory
+        run: |
+          TEMP_DIR=$(mktemp -d)
+          cp -rp ${{env.charm_working_directory}}/. $TEMP_DIR
+          rm -rf .* * || :
+          cp -rp $TEMP_DIR/. .
+          rm -rf $TEMP_DIR
+      - uses: canonical/charming-actions/release-libraries@2.5.0-rc
+        name: Release libs
+        with:
+          credentials: ${{ secrets.CHARMHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
   # get-run-id:
   #   name: Get workflow run id
   #   needs: [ branch-up-to-date-check-enabled ]
