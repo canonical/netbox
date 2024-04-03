@@ -63,6 +63,7 @@ jobs:
     runs-on: ubuntu-22.04
     outputs:
       charm_working_directory: ${{ env.charm_working_directory || env.working_directory }}
+      channel: ${{ env.channel }}
     steps:
       - run: echo "Exposing env vars"
   get-runner-image:
@@ -318,7 +319,8 @@ jobs:
           done
 
   publish-charm:
-    name: Publish charm to ${{ env.channel }}
+    name: Publish charm to ${{ needs.vars.outputs.channel }}
+    needs: vars
     runs-on: ${{ needs.get-runner-image.outputs.runs-on }}
     needs: [get-run-id, get-runner-image, publish-images]
     if: ${{ !failure() }}
