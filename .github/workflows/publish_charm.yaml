@@ -7,7 +7,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
 
 env:
   OWNER: ${{ github.repository_owner }}
