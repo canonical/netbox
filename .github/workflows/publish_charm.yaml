@@ -99,9 +99,7 @@ jobs:
       run-id: ${{ env.RUN_ID }}
     steps:
       - name: Get workflow run id
-        # TODO THIS IS THE CORRECT ONE if: ${{ github.event_name == 'push' }}
-        # if: ${{ github.event_name == 'push'  || github.event_name == 'pull_request' }}
-        if: false
+        if: ${{ github.event_name == 'push' }}
         shell: bash
         run: |
           # Get commit info
@@ -153,15 +151,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
       - name: Get current run id
-        # TODO THIS IS THE CORRECT ONE: if: ${{ github.event_name == 'pull_request' }}
-        if: false
+        if: ${{ github.event_name == 'pull_request' }}
         shell: bash
         run: |
           echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
-      - name: TODO REMOVE THIS Get current run id
-        shell: bash
-        run: |
-          echo "RUN_ID=8550482603" >> $GITHUB_ENV
   get-images:
     name: Get images
     runs-on: ubuntu-22.04
