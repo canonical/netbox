@@ -162,7 +162,7 @@ jobs:
       - name: TODO REMOVE THIS Get current run id
         shell: bash
         run: |
-          echo "RUN_ID=8535324640" >> $GITHUB_ENV
+          echo "RUN_ID=8550482603" >> $GITHUB_ENV
   get-images:
     name: Get images
     runs-on: ubuntu-22.04
