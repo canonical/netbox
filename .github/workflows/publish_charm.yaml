@@ -280,7 +280,6 @@ jobs:
           CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "true"
           CHARMCRAFT_AUTH:  ${{ secrets.CHARMHUB_TOKEN }}
         run: |
-          set -x
           charm=${{ env.CHARM_NAME }}
           declare -a resources
           declare -a images
@@ -399,16 +398,14 @@ jobs:
           fi
           echo "CHARM_NAME=$CHARM_NAME">> $GITHUB_ENV
       - name: Download charm artifact
-        # TODO THIS WAS BEFORE... if: ${{ github.event_name == 'push' }}
-        if: true
+        if: ${{ github.event_name == 'push' }}
         run: |
           gh run download ${{ needs.get-run-id.outputs.run-id }} -R ${{ github.repository }} -n ${{ env.CHARM_NAME }}-charm
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Download charm artifact (for testing)
         uses: actions/download-artifact@v4
-        # TODO ORIGINAL VALUE if: ${{ github.event_name == 'pull_request' }}
-        if: false
+        if: ${{ github.event_name == 'pull_request' }}
         with:
           name: ${{ env.CHARM_NAME }}-charm
           path: ${{ env.working_directory }}

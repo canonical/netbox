@@ -8,7 +8,7 @@ jobs:
     uses: canonical/operator-workflows/.github/workflows/integration_test.yaml@test-netbox
     secrets: inherit
     with:
-      extra-arguments: -x --localstack-address 172.17.0.1 -k "test_nothing"
+      extra-arguments: -x --localstack-address 172.17.0.1
       pre-run-script: ./charm/localstack-installation.sh
       trivy-image-config: "trivy.yaml"
       juju-channel: 3.1/stable

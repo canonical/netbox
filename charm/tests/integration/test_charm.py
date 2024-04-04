@@ -17,10 +17,6 @@ from tests.integration.helpers import assert_return_true_with_retry, get_new_adm
 logger = logging.getLogger(__name__)
 
 
-async def test_nothing() -> None:
-    pass
-
-
 @pytest.mark.usefixtures("netbox_app")
 async def test_netbox_health(
     netbox_app_name: str, get_unit_ips: Callable[[str], Coroutine[None, None, List[str]]]
