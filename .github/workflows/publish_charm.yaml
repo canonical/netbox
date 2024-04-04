@@ -415,10 +415,6 @@ jobs:
       - name: Get charm file
         id: get-charm-file
         run: |
-          set -x
-          echo CHARM_NAME: -${{ env.CHARM_NAME }}-
-          ls
-          echo resolved: "CHARM_FILE=$(ls ${{ env.CHARM_NAME }}_*.charm)"
           echo "CHARM_FILE=$(ls ${{ env.CHARM_NAME }}_*.charm)" >> $GITHUB_OUTPUT
       - name: Upload charm to charmhub
         env:
@@ -426,9 +422,8 @@ jobs:
           CHARMCRAFT_AUTH:  ${{ secrets.CHARMHUB_TOKEN }}
           CHARM_FILE: ${{ steps.get-charm-file.outputs.CHARM_FILE }}
         run: |
-          echo charm_file: $CHARM_FILE
-          echo channel: $channel
           charmcraft resource-revisions netbox django-app-image
+          # it looks like this is not necessary, but it is what the canonical/charming-actions/upload-charm does.
           MAX_REV=$(charmcraft resource-revisions netbox django-app-image --format=json | jq 'map( .revision) | max')
           echo max_rev ${MAX_REV}
           charmcraft upload --format json --release ${channel} ${CHARM_FILE} --resource=django-app-image:${MAX_REV}

@@ -8,5 +8,5 @@ jobs:
     uses: canonical/operator-workflows/.github/workflows/test.yaml@test-netbox
     secrets: inherit
     with:
+      charm-working-directory: "./charm"
       shellcheck-working-directory: "./charm"
-      docs-working-directory: "./charm"
