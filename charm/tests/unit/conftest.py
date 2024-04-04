@@ -61,7 +61,7 @@ resources:
 
     actions_file = textwrap.dedent(
         """\
-    create-super-user:
+    create-superuser:
       email:
         type: string
       username:

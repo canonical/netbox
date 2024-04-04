@@ -30,16 +30,6 @@ links:
 extensions:
   - django-framework
 
-actions:
-  # This action should be deleted once the last paas-app-charmer project
-  # version is used, as it will be there
-  create-super-user:
-    description: Create a super user
-    username:
-      type: string
-    email:
-      type: string
-
 requires:
   postgresql:
     interface: postgresql_client

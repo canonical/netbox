@@ -5,7 +5,6 @@
 """Django Charm entrypoint."""
 
 import logging
-import secrets
 import typing
 import urllib.parse
 
@@ -42,20 +41,47 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         self.saml = SamlRequires(self)
         self.s3 = S3Requirer(self, self._S3_RELATION_NAME)
 
+        # GRRR monkey patching get_environment
+        def get_environment_decorator(
+            get_environment_func: typing.Callable[[], dict[str, str]]
+        ) -> typing.Callable[[], dict[str, str]]:
+            """TODO.
+
+            Args:
+               get_environment_func: get_environment function.
+
+            Returns:
+               the decorated get_environment function
+            """
+            logger.warning("DECORATING FUNCTION gen_environment")
+
+            def decorated_get_environment() -> dict[str, str]:
+                """TODO.
+
+                Returns:
+                    env
+                """
+                env = get_environment_func()
+                env.update(self.gen_extra_env())
+                return env
+
+            return decorated_get_environment
+
+        self._wsgi_app.gen_environment = get_environment_decorator(self._wsgi_app.gen_environment)
+
         self.framework.observe(self.saml.on.saml_data_available, self._on_saml_data_available)
         self.framework.observe(self.s3.on.credentials_changed, self._on_s3_credential_changed)
         self.framework.observe(self.s3.on.credentials_gone, self._on_s3_credential_gone)
         self.framework.observe(self._ingress.on.ready, self._on_ingress_ready)
         self.framework.observe(self._ingress.on.revoked, self._on_ingress_revoked)
-        self.framework.observe(self.on.create_super_user_action, self._on_create_super_user_action)
 
-    def gen_env(self) -> dict[str, str]:
+    def gen_extra_env(self) -> dict[str, str]:
         """Return the environment variables for django scripts.
 
         Returns:
            dict with environment variables.
         """
-        env = super().gen_env()
+        env = {}
         if self._ingress.url:
             env["DJANGO_BASE_URL"] = self._ingress.url
             # This may be problematic, as it could return http instead of https.
@@ -132,7 +158,7 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         This should disappear/get updated once paas-app-charmer
         project supports the S3 integration.
         """
-        self.reconcile()
+        self.restart()
 
     def _on_s3_credential_gone(self, _: CredentialsGoneEvent) -> None:
         """Handle event for S3 Credentials Gone.
@@ -140,21 +166,21 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         This should disappear/get updated once paas-app-charmer
         project supports the S3 integration.
         """
-        self.reconcile()
+        self.restart()
 
     def _on_saml_data_available(self, _: SamlDataAvailableEvent) -> None:
         """Handle event for Saml data available."""
-        self.reconcile()
+        self.restart()
 
     def _on_ingress_revoked(self, _: ops.HookEvent) -> None:
         """Handle event for ingress revoked."""
-        self.reconcile()
+        self.restart()
 
     def _on_ingress_ready(self, _: ops.HookEvent) -> None:
         """Handle event for ingress ready."""
-        self.reconcile()
+        self.restart()
 
-    def reconcile(self) -> None:
+    def restart(self) -> None:
         """Reconcile all services."""
         # This is an interesting situation for the paas-app-charmer project,
         # as this missing integration (if required) should block the charm,
@@ -176,7 +202,7 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         self._add_command_to_cron(
             CRON_AT_MIDNIGHT, "housekeeping", "/bin/python3 manage.py housekeeping"
         )
-        super().reconcile()
+        super().restart()
 
     def _add_command_to_cron(self, scheduling: str, name: str, command: str) -> None:
         """Add a command that will be run with cron.
@@ -189,12 +215,12 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         container = self.workload()
         if not container.can_connect():
             return
-        working_dir = str(self._BASE_DIR / "app")
+        working_dir = str(self._charm_state.app_dir)
         # Disable protected access to avoid hardcoding the main service name.
         # pylint: disable=protected-access
         pebble_command = (
             f"pebble exec --user=_daemon_ -w={working_dir} "
-            f"--context={self._server._service_name} -- {command}"
+            f"--context={self._charm_state.service_name} -- {command}"
         )
         container.push(
             f"/etc/cron.d/{name}",
@@ -242,43 +268,13 @@ class DjangoCharm(paas_app_charmer.django.Charm):
                     "command": "/bin/python3 manage.py rqworker high default low",
                     # This probably should not be hardcoded. Update it when we
                     # use the final paas-app-charmer project.
-                    "working-dir": str(self._BASE_DIR / "app"),
-                    "environment": self.gen_env(),
+                    "working-dir": str(self._charm_state.app_dir),
+                    "environment": self._wsgi_app.gen_environment(),
                     "user": "_daemon_",
                 }
             },
         }
         return layer
-
-    def _on_create_super_user_action(self, event: ops.ActionEvent) -> None:
-        """Create a superuser in Django.
-
-        This should be deleted once we integrate with the paas-app-charmer project.
-
-        Args:
-            event: the action event.
-        """
-        random_password = secrets.token_urlsafe(16)
-        container = self.unit.get_container(self._CONTAINER_NAME)
-        if not container.can_connect():
-            event.fail("django-app container is not ready")
-        try:
-            action_environment = {
-                "DJANGO_SUPERUSER_USERNAME": event.params["username"],
-                "DJANGO_SUPERUSER_EMAIL": event.params["email"],
-                "DJANGO_SUPERUSER_PASSWORD": random_password,
-            }
-            environment = self.gen_env()
-            output, _ = container.exec(
-                ["python3", "manage.py", "createsuperuser", "--noinput"],
-                environment=(action_environment | environment),
-                combine_stderr=True,
-                working_dir=str(self._BASE_DIR / "app"),
-                user="_daemon_",
-            ).wait_output()
-            event.set_results({"output": output, "password": random_password})
-        except ops.pebble.ExecError as e:
-            event.fail(str(e.stdout))
 
 
 class S3Parameters(pydantic.BaseModel):  # pylint: disable=no-member
@@ -297,11 +293,11 @@ class S3Parameters(pydantic.BaseModel):  # pylint: disable=no-member
 
     access_key: str = pydantic.Field(alias="access-key")
     secret_key: str = pydantic.Field(alias="secret-key")
-    region: typing.Optional[str]
+    region: typing.Optional[str] = None
     bucket: str
-    endpoint: typing.Optional[str]
+    endpoint: typing.Optional[str] = None
     path: str = pydantic.Field(default="")
-    s3_uri_style: typing.Optional[str] = pydantic.Field(alias="s3-uri-style")
+    s3_uri_style: typing.Optional[str] = pydantic.Field(alias="s3-uri-style", default=None)
 
     @property
     def addressing_style(self) -> typing.Optional[str]:
