@@ -41,4 +41,5 @@ jobs:
       destination-channel: ${{ github.event.inputs.destination-channel }}
       doc-automation-disabled: false
       charm-working-directory: "./charm"
-secrets: inherit
+    secrets: inherit
+
