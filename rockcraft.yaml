@@ -111,10 +111,16 @@ parts:
             craftctl default
         override-prime: |-
             craftctl default
-            # Do not allow to write in media folder. Just S3 storage.
-            # chown -R 584792 django/app/media
-            chown -R 584792 django/app/reports
-            chown -R 584792 django/app/scripts
+            # # Do not allow to write in media folder. Just S3 storage.
+            # # chown -R 584792 django/app/media
+            # chown -R 584792 django/app/reports
+            # chown -R 584792 django/app/scripts
+        permissions:
+          - path: django/app/reports
+            owner: 584792
+          - path: django/app/scripts
+            owner: 584792
+
     django-framework/dependencies:
         overlay-packages:
             - ca-certificates

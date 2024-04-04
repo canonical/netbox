@@ -10,8 +10,8 @@ import typing
 import urllib.parse
 
 import ops
+import paas_app_charmer.django
 import pydantic
-import xiilib.django
 from charms.data_platform_libs.v0.s3 import (
     CredentialsChangedEvent,
     CredentialsGoneEvent,
@@ -26,7 +26,7 @@ CRON_EVERY_5_MINUTES = "*/5 * * * *"
 CRON_AT_MIDNIGHT = "0 0 * * *"
 
 
-class DjangoCharm(xiilib.django.Charm):
+class DjangoCharm(paas_app_charmer.django.Charm):
     """Django Charm service."""
 
     _S3_RELATION_NAME = "storage"
