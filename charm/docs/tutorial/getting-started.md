@@ -117,7 +117,7 @@ juju run traefik-k8s/0 show-proxied-endpoints --format=yaml
 ## Create superuser
 To be able to login to NetBox, you can create a super user with the next command:
 ```
-juju run netbox/0 create-super-user username=<admin_username> email=<admin_email>
+juju run netbox/0 create-superuser username=<admin_username> email=<admin_email>
 ```
 
 Congratulations, With the username created and the password provided in the response, 

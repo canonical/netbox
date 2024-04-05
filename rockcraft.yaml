@@ -111,20 +111,20 @@ parts:
             craftctl default
         override-prime: |-
             craftctl default
-            # # Do not allow to write in media folder. Just S3 storage.
-            # # chown -R 584792 django/app/media
-            # chown -R 584792 django/app/reports
-            # chown -R 584792 django/app/scripts
+            # JAVI JUST TO TEST. PUT THIS IN SOME KIND OF FILE... GRRRR
+            echo -e '#!/bin/bash\nexec python3 manage.py migrate'  > "${CRAFT_PRIME}/django/app/migrate.sh"
         permissions:
           - path: django/app/reports
             owner: 584792
+            group: 584792
           - path: django/app/scripts
             owner: 584792
+            group: 584792
 
     django-framework/dependencies:
         overlay-packages:
             - ca-certificates
-        # pyproject.toml breaks the building. Remove it.
+        # pyproject.toml breaks the build. Remove it.
         override-build: |-
             rm -f pyproject.toml
             craftctl default
@@ -149,6 +149,7 @@ parts:
             # needed for saml
             - libxmlsec1
             - libxmlsec1-openssl
+            - python-is-python3
 
     cron:
       stage-packages:

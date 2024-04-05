@@ -30,12 +30,24 @@ links:
 extensions:
   - django-framework
 
+actions:
+  # With the next charmcraft create-superuser action should not be here
+  create-superuser:
+    description: Create a super user
+    username:
+      type: string
+    email:
+      type: string
+
 requires:
   postgresql:
     interface: postgresql_client
     limit: 1
   storage:
     interface: s3
+    limit: 1
+  redis:
+    interface: redis
     limit: 1
   saml:
     interface: saml
@@ -44,29 +56,6 @@ requires:
 
 config:
   options:
-    redis_hostname:
-      description: |-
-        Redis hostname.
-        Will be replaced by the redis integration when paas-app-charmer project implements it.
-      type: string
-    redis_port:
-      description: |-
-        Redis port.
-        Will be replaced by the redis integration when paas-app-charmer project implements it.
-      type: int
-      default: 6379
-    redis_username:
-      description: |-
-        Redis username.
-        Will be replaced by the redis integration when paas-app-charmer project implements it.
-      type: string
-      default: ''
-    redis_password:
-      description: |-
-        Redis password.
-        Will be replaced by the redis integration when paas-app-charmer project implements it.
-      type: string
-      default: ''
     saml_sp_entity_id:
       description: |-
         SAML SP entity id.

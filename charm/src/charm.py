@@ -41,7 +41,7 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         self.saml = SamlRequires(self)
         self.s3 = S3Requirer(self, self._S3_RELATION_NAME)
 
-        # GRRR monkey patching get_environment
+        # JAVI monkey patching get_environment
         def get_environment_decorator(
             get_environment_func: typing.Callable[[], dict[str, str]]
         ) -> typing.Callable[[], dict[str, str]]:
@@ -62,12 +62,44 @@ class DjangoCharm(paas_app_charmer.django.Charm):
                     env
                 """
                 env = get_environment_func()
+                logger.warning("base get_environment: %s", env)
                 env.update(self.gen_extra_env())
                 return env
 
             return decorated_get_environment
 
         self._wsgi_app.gen_environment = get_environment_decorator(self._wsgi_app.gen_environment)
+
+        # JAVI monkey patching wsgi_layer.
+        # an alternative is to call replan twice in
+        # restart. Not nice either.
+        def get_wsgi_layer_decorator(
+            wsgi_layer: typing.Callable[[], ops.pebble.LayerDict]
+        ) -> typing.Callable[[], ops.pebble.LayerDict]:
+            """TODO.
+
+            Args:
+               wsgi_layer: wsgi_layer function.
+
+            Returns:
+               the decorated wsgi_layer function
+            """
+            logger.warning("DECORATING FUNCTION wsgi_layer")
+
+            def decorated_get_wsgi_layer() -> ops.pebble.LayerDict:
+                """TODO.
+
+                Returns:
+                    env
+                """
+                layer = wsgi_layer()
+                logger.warning("base layer: %s", layer)
+                layer["services"] = layer["services"] | self._netbox_rq_layer()["services"]
+                return layer
+
+            return decorated_get_wsgi_layer
+
+        self._wsgi_app._wsgi_layer = get_wsgi_layer_decorator(self._wsgi_app._wsgi_layer)
 
         self.framework.observe(self.saml.on.saml_data_available, self._on_saml_data_available)
         self.framework.observe(self.s3.on.credentials_changed, self._on_s3_credential_changed)
@@ -92,6 +124,7 @@ class DjangoCharm(paas_app_charmer.django.Charm):
                 env["DJANGO_SAML_SP_ENTITY_ID"] = parsed_ingress_url.geturl()
         env |= self.saml_env()
         env |= self.s3_env()
+        logger.warning("extra get_environment: %s", env)
         return env
 
     def s3_env(self) -> dict[str, str]:
@@ -180,19 +213,39 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         """Handle event for ingress ready."""
         self.restart()
 
-    def restart(self) -> None:
-        """Reconcile all services."""
-        # This is an interesting situation for the paas-app-charmer project,
-        # as this missing integration (if required) should block the charm,
-        # as it can mean losing data.
+    def is_ready(self) -> bool:
+        """Check if the charm is ready to start the workload application.
+
+        Returns:
+            True if the charm is ready to start the workload application.
+        """
+        # JAVI when migrating, it should change the status, that would be nice
         try:
             S3Parameters(**self.s3.get_s3_connection_info())
         except pydantic.ValidationError:
             logger.exception("Invalid/Missing S3 parameters.")
-            status = ops.BlockedStatus("Waiting for correct s3 storage integration")
-            self.unit.status = status
-            if self.unit.is_leader():
-                self.app.status = status
+            self._update_app_and_unit_status(
+                ops.BlockedStatus("Waiting for correct s3 storage integration")
+            )
+            return False
+
+        # JAVI any better way?
+        if not self._charm_state.database_uris:
+            self._update_app_and_unit_status(ops.BlockedStatus("Missing database integration."))
+            return False
+
+        if not self._charm_state.redis_uri:
+            self._update_app_and_unit_status(ops.BlockedStatus("Missing redis integration."))
+            return False
+
+        return super().is_ready()
+
+    def restart(self) -> None:
+        """Restart all services."""
+        # This is an interesting situation for the paas-app-charmer project,
+        # as this missing integration (if required) should block the charm,
+        # as it can mean losing data.
+        if not self.is_ready():
             return
 
         self._add_netbox_rq()
@@ -243,6 +296,7 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         """Add layer for netbox-rq service."""
         container = self.workload()
         if container.can_connect():
+            logger.warning("adding netbox-rq")
             container.add_layer("netbox-rq", self._netbox_rq_layer(), combine=True)
 
     def _netbox_rq_layer(self) -> ops.pebble.LayerDict:
@@ -251,7 +305,7 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         Returns:
            Full layer for netbox-rq
         """
-        # As super.reconcile sets to override "replace" to all
+        # As super.restart sets to override "replace" to all
         # services in the base layer in the rockcraft.yaml, we need to
         # include the full service here, and not in rockcraft.yaml.
         # Once NetBox is integrated with the new paas-app-charmer
@@ -271,7 +325,13 @@ class DjangoCharm(paas_app_charmer.django.Charm):
                     "working-dir": str(self._charm_state.app_dir),
                     "environment": self._wsgi_app.gen_environment(),
                     "user": "_daemon_",
-                }
+                },
+                #     # JAVI HEALTHCHECK?
+                # "checks": {
+                #     "netbox-rq-alive": {
+                #         "override": "replace",
+                #         "level": "ready",
+                #     }
             },
         }
         return layer

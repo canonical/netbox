@@ -73,7 +73,7 @@ Unit that this execution is responsible for.
 
 ---
 
-<a href="../../charm/src/charm.py#L78"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L110"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `gen_extra_env`
 
@@ -90,7 +90,24 @@ Return the environment variables for django scripts.
 
 ---
 
-<a href="../../charm/src/charm.py#L183"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L216"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+
+### <kbd>function</kbd> `is_ready`
+
+```python
+is_ready() → bool
+```
+
+Check if the charm is ready to start the workload application. 
+
+
+
+**Returns:**
+  True if the charm is ready to start the workload application. 
+
+---
+
+<a href="../../charm/src/charm.py#L243"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `restart`
 
@@ -98,11 +115,11 @@ Return the environment variables for django scripts.
 restart() → None
 ```
 
-Reconcile all services. 
+Restart all services. 
 
 ---
 
-<a href="../../charm/src/charm.py#L97"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L130"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `s3_env`
 
@@ -121,7 +138,7 @@ This should disappear/get updated once paas-app-charmer project supports the S3 
 
 ---
 
-<a href="../../charm/src/charm.py#L113"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L146"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `saml_env`
 
@@ -138,7 +155,7 @@ Environment variables for SAML.
 
 ---
 
-<a href="../../charm/src/charm.py#L232"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L285"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `workload`
 
@@ -207,7 +224,7 @@ Returns the set of fields that have been explicitly set on this model instance.
 
 ---
 
-<a href="../../charm/src/charm.py#L310"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L370"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `to_env`
 
