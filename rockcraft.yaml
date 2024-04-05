@@ -111,7 +111,7 @@ parts:
             craftctl default
         override-prime: |-
             craftctl default
-            # JAVI JUST TO TEST. PUT THIS IN SOME KIND OF FILE... GRRRR
+            # JAVI JUST TO TEST. PUT THIS IN SOME KIND OF FILE...
             echo -e '#!/bin/bash\nexec python3 manage.py migrate'  > "${CRAFT_PRIME}/django/app/migrate.sh"
         permissions:
           - path: django/app/reports

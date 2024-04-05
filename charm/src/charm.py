@@ -242,12 +242,10 @@ class DjangoCharm(paas_app_charmer.django.Charm):
 
     def restart(self) -> None:
         """Restart all services."""
-        # This is an interesting situation for the paas-app-charmer project,
-        # as this missing integration (if required) should block the charm,
-        # as it can mean losing data.
         if not self.is_ready():
             return
 
+        # JAVI Repeated in _wsgi_layer
         self._add_netbox_rq()
         self._add_command_to_cron(
             CRON_EVERY_5_MINUTES, "syncdatasource", "/bin/python3 manage.py syncdatasource --all"

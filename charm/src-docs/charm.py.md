@@ -155,7 +155,7 @@ Environment variables for SAML.
 
 ---
 
-<a href="../../charm/src/charm.py#L285"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L283"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `workload`
 
@@ -224,7 +224,7 @@ Returns the set of fields that have been explicitly set on this model instance.
 
 ---
 
-<a href="../../charm/src/charm.py#L370"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L368"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `to_env`
 
