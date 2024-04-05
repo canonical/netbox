@@ -324,12 +324,15 @@ class DjangoCharm(paas_app_charmer.django.Charm):
                     "environment": self._wsgi_app.gen_environment(),
                     "user": "_daemon_",
                 },
-                #     # JAVI HEALTHCHECK?
-                # "checks": {
-                #     "netbox-rq-alive": {
-                #         "override": "replace",
-                #         "level": "ready",
-                #     }
+            },
+            "checks": {
+                "netbox-rq-alive": {
+                    "override": "replace",
+                    "level": "ready",
+                    "exec": {
+                        "command": "/bin/sh -c 'pebble services django | grep active'",
+                    },
+                },
             },
         }
         return layer
