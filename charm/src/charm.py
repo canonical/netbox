@@ -94,7 +94,10 @@ class DjangoCharm(paas_app_charmer.django.Charm):
                 """
                 layer = wsgi_layer()
                 logger.warning("base layer: %s", layer)
-                layer["services"] = layer["services"] | self._netbox_rq_layer()["services"]
+                layer["services"]["netbox-rq"] = self._netbox_rq_service()
+                if "checks" not in layer:
+                    layer["checks"] = {}
+                layer["checks"]["netbox-rq-check"] = self._netbox_rq_check()
                 return layer
 
             return decorated_get_wsgi_layer
@@ -245,8 +248,6 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         if not self.is_ready():
             return
 
-        # JAVI Repeated in _wsgi_layer
-        self._add_netbox_rq()
         self._add_command_to_cron(
             CRON_EVERY_5_MINUTES, "syncdatasource", "/bin/python3 manage.py syncdatasource --all"
         )
@@ -290,52 +291,38 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         """
         return self.unit.get_container("django-app")
 
-    def _add_netbox_rq(self) -> None:
-        """Add layer for netbox-rq service."""
-        container = self.workload()
-        if container.can_connect():
-            logger.warning("adding netbox-rq")
-            container.add_layer("netbox-rq", self._netbox_rq_layer(), combine=True)
-
-    def _netbox_rq_layer(self) -> ops.pebble.LayerDict:
-        """Netbox-rq layer for Pebble.
+    def _netbox_rq_service(self) -> ops.pebble.ServiceDict:
+        """Get netbox-rq pebble service.
 
         Returns:
-           Full layer for netbox-rq
+           netbox-rq pebble service
         """
-        # As super.restart sets to override "replace" to all
-        # services in the base layer in the rockcraft.yaml, we need to
-        # include the full service here, and not in rockcraft.yaml.
-        # Once NetBox is integrated with the new paas-app-charmer
-        # project, review it to see if it would be better to put it in
-        # the rockcraft.yaml and set "override: merge" instead
-        # here. In that case, we should just set the env variables
-        # here.
-        layer: ops.pebble.LayerDict = {
-            "services": {
-                "netbox-rq": {
-                    "override": "replace",
-                    "summary": "NetBox Request Queue Worker",
-                    "startup": "enabled",
-                    "command": "/bin/python3 manage.py rqworker high default low",
-                    # This probably should not be hardcoded. Update it when we
-                    # use the final paas-app-charmer project.
-                    "working-dir": str(self._charm_state.app_dir),
-                    "environment": self._wsgi_app.gen_environment(),
-                    "user": "_daemon_",
-                },
-            },
-            "checks": {
-                "netbox-rq-alive": {
-                    "override": "replace",
-                    "level": "ready",
-                    "exec": {
-                        "command": "/bin/sh -c 'pebble services django | grep active'",
-                    },
-                },
+        return {
+            "override": "replace",
+            "summary": "NetBox Request Queue Worker",
+            "startup": "enabled",
+            "command": "/bin/python3 manage.py rqworker high default low",
+            # This probably should not be hardcoded. Update it when we
+            # use the final paas-app-charmer project.
+            "working-dir": str(self._charm_state.app_dir),
+            "environment": self._wsgi_app.gen_environment(),
+            "user": "_daemon_",
+        }
+
+    def _netbox_rq_check(self) -> ops.pebble.CheckDict:
+        """Get netbox-rq pebble check.
+
+        Returns:
+           netbox-rq pebble check
+        """
+        return {
+            "override": "replace",
+            # "level": "ready",
+            "level": "alive",
+            "exec": {
+                "command": "/bin/sh -c 'pebble services netbox-rq | grep \" active \"'",
             },
         }
-        return layer
 
 
 class S3Parameters(pydantic.BaseModel):  # pylint: disable=no-member
