@@ -95,11 +95,12 @@ juju deploy ./charm/netbox_ubuntu-22.04-amd64.charm \
 
 ### Configure NetBox
 
-NetBox requires a Redis server to work correctly. This can
-be set using configuration options, like:
+NetBox requires a Redis integration to work correctly. This can be
+done with:
 
 ```bash
-juju config netbox redis_hostname=<redis_hostname>
+juju deploy redis-k8s --channel=latest/edge
+juju integrate redis-k8s netbox
 ```
 
 NetBox is built using Django. It is necessary to set the
