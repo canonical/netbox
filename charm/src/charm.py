@@ -81,9 +81,9 @@ class DjangoCharm(paas_app_charmer.django.Charm):
             (using a file in the filesystem). This complicates adding the
             netbox-rq service, as it needs the environment variables and
             cannot be just set in the rockcraft.yaml file. This decorator
-            can patch _wsgi_layer, so netbox-rq layer can be inserted.
-            An alternative to would be to call replan twice in the restart
-            function, but that option restarts the services twice.
+            patches _wsgi_layer, so netbox-rq layer can be inserted.
+            An alternative would be to call replan twice in the restart
+            function.
 
             Args:
                wsgi_layer: wsgi_layer function.
