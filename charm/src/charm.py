@@ -237,7 +237,7 @@ class DjangoCharm(paas_app_charmer.django.Charm):
             self._update_app_and_unit_status(ops.BlockedStatus("Missing database integration."))
             return False
 
-        if not self._charm_state.redis_uri:
+        if not self._charm_state.redis_uri or self._charm_state.redis_uri == "redis://None:None":
             self._update_app_and_unit_status(ops.BlockedStatus("Missing redis integration."))
             return False
 
@@ -317,8 +317,7 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         """
         return {
             "override": "replace",
-            # "level": "ready",
-            "level": "alive",
+            "level": "ready",
             "exec": {
                 "command": "/bin/sh -c 'pebble services netbox-rq | grep \" active \"'",
             },
