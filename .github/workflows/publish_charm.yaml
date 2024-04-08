@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+  pull_request:
 
 env:
   OWNER: ${{ github.repository_owner }}
@@ -100,7 +101,8 @@ jobs:
       run-id: ${{ env.RUN_ID }}
     steps:
       - name: Get workflow run id
-        if: ${{ github.event_name == 'push' }}
+        # TODO JAVI TEST if: ${{ github.event_name == 'push' }}
+        if: false
         shell: bash
         run: |
           # Get commit info
@@ -152,10 +154,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
       - name: Get current run id
-        if: ${{ github.event_name == 'pull_request' }}
+        # TODO JAVI TEST if: ${{ github.event_name == 'pull_request' }}
+        if: false
         shell: bash
         run: |
           echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
+      - name: Get current run id (TODO TO TEST)
+        shell: bash
+        run: |
+          echo "RUN_ID=8597165771" >> $GITHUB_ENV
   get-images:
     name: Get images
     runs-on: ubuntu-22.04
@@ -256,14 +263,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Download images artifact
-        if: ${{ github.event_name == 'push' }}
+        # TODO JAVI TEST if: ${{ github.event_name == 'push' }}
         run: |
           gh run download ${{ needs.get-run-id.outputs.run-id }} -R ${{ github.repository }} -n ${{ env.CHARM_NAME }}-images
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Download images artifact (for testing)
         uses: actions/download-artifact@v4
-        if: ${{ github.event_name == 'pull_request' }}
+        # TODO JAVI TEST if: ${{ github.event_name == 'pull_request' }}
+        if: false
         with:
           name: ${{ env.CHARM_NAME }}-images
       - name: Publish image
@@ -271,6 +279,7 @@ jobs:
           CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "true"
           CHARMCRAFT_AUTH:  ${{ secrets.CHARMHUB_TOKEN }}
         run: |
+          set -x
           charm=${{ env.CHARM_NAME }}
           declare -a resources
           declare -a images
@@ -390,29 +399,31 @@ jobs:
           fi
           echo "CHARM_NAME=$CHARM_NAME">> $GITHUB_ENV
       - name: Download charm artifact
-        if: ${{ github.event_name == 'push' }}
+        # TODO JAVI TEST if: ${{ github.event_name == 'push' }}
         run: |
           gh run download ${{ needs.get-run-id.outputs.run-id }} -R ${{ github.repository }} -n ${{ env.CHARM_NAME }}-charm
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Download charm artifact (for testing)
         uses: actions/download-artifact@v4
-        if: ${{ github.event_name == 'pull_request' }}
+        # TODO JAVI TEST if: ${{ github.event_name == 'pull_request' }}
+        if: false
         with:
           name: ${{ env.CHARM_NAME }}-charm
           path: ${{ env.working_directory }}
       - name: Get charm file
         id: get-charm-file
         run: |
+          set -x
+          echo charm_name: ${{ env.CHARM_NAME }}
+          echo "CHARM_FILE=$(ls ${{ env.CHARM_NAME }}_*.charm)"
           echo "CHARM_FILE=$(ls ${{ env.CHARM_NAME }}_*.charm)" >> $GITHUB_OUTPUT
       - name: Upload charm to charmhub
-        env:
-          CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "true"
-          CHARMCRAFT_AUTH:  ${{ secrets.CHARMHUB_TOKEN }}
-          CHARM_FILE: ${{ steps.get-charm-file.outputs.CHARM_FILE }}
-        run: |
-          charmcraft resource-revisions netbox django-app-image
-          # it looks like this is not necessary, but it is what the canonical/charming-actions/upload-charm does.
-          MAX_REV=$(charmcraft resource-revisions netbox django-app-image --format=json | jq 'map( .revision) | max')
-          echo max_rev ${MAX_REV}
-          charmcraft upload --format json --release ${channel} ${CHARM_FILE} --resource=django-app-image:${MAX_REV}
+        uses: canonical/charming-actions/upload-charm@2.5.0-rc
+        with:
+          built-charm-path: ${{ env.CHARM_FILE }}
+          credentials: ${{ secrets.CHARMHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          channel: ${{ inputs.channel }}
+          tag-prefix: ${{ inputs.tag-prefix }}
+          upload-image: false
