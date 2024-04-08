@@ -9,4 +9,4 @@ jobs:
     secrets: inherit
     with:
       shellcheck-working-directory: "./charm"
-      charm-working-directory: "./charm"
+      charm-directory: "charm"
