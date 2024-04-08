@@ -16,7 +16,7 @@ env:
   charm_working_directory: "./charm"
   charmcraft_ref: feat-12f-django
   charmcraft_repository: weiiwang01/charmcraft
-  paas-app-charmer-oci-name: django-app-image
+  paas_app_charmer_oci_name: django-app-image
   tag_prefix:
   working_directory: "./"
 
@@ -302,11 +302,11 @@ jobs:
           echo images: -"${images[@]}"-
           
           for image in "${images[@]}"; do
-            if [[ "${{ paas-app-charmer-oci-name }}" != "" ]]; then
+            if [[ "${{ env.paas_app_charmer_oci_name }}" != "" ]]; then
                 # This is for paas-app-charmer . The main image name (resource oci in charmcraft.yaml) is
                 # defined with the env variable paas-app-charmer-oci-name, and corresponds to the main
                 # image in rockcraft.yaml.
-                resource_name="{{ paas-app-charmer-oci-name }}"
+                resource_name="{{ env.paas_app_charmer_oci_name }}"
             else
                 resource_name=$(echo $image | awk -F '/' '{print $NF}' | cut -d ':' -f 1)-image
             fi
