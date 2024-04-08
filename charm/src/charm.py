@@ -318,6 +318,7 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         return {
             "override": "replace",
             "level": "ready",
+            "period": "30s",
             "exec": {
                 "command": "/bin/sh -c 'pebble services netbox-rq | grep \" active \"'",
             },
