@@ -99,7 +99,6 @@ class DjangoCharm(paas_app_charmer.django.Charm):
                     the pebble layer
                 """
                 layer = wsgi_layer()
-                logger.warning("base layer: %s", layer)
                 layer["services"]["netbox-rq"] = self._netbox_rq_service()
                 if "checks" not in layer:
                     layer["checks"] = {}
@@ -133,7 +132,6 @@ class DjangoCharm(paas_app_charmer.django.Charm):
                 env["DJANGO_SAML_SP_ENTITY_ID"] = parsed_ingress_url.geturl()
         env |= self.saml_env()
         env |= self.s3_env()
-        logger.warning("extra get_environment: %s", env)
         return env
 
     def s3_env(self) -> dict[str, str]:
@@ -228,7 +226,6 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         Returns:
             True if the charm is ready to start the workload application.
         """
-        # JAVI when migrating, it should change the status, that would be nice
         try:
             S3Parameters(**self.s3.get_s3_connection_info())
         except pydantic.ValidationError:
@@ -238,7 +235,6 @@ class DjangoCharm(paas_app_charmer.django.Charm):
             )
             return False
 
-        # JAVI any better way?
         if not self._charm_state.database_uris:
             self._update_app_and_unit_status(ops.BlockedStatus("Missing database integration."))
             return False

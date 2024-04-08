@@ -111,7 +111,7 @@ parts:
             craftctl default
         override-prime: |-
             craftctl default
-            # JAVI JUST TO TEST. PUT THIS IN SOME KIND OF FILE...
+            # Until paas-app-charmer provides a direct migrate for Django
             echo -e '#!/bin/bash\nexec python3 manage.py migrate'  > "${CRAFT_PRIME}/django/app/migrate.sh"
         permissions:
           - path: django/app/reports
