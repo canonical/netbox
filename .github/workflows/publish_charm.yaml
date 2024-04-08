@@ -101,7 +101,8 @@ jobs:
       run-id: ${{ env.RUN_ID }}
     steps:
       - name: Get workflow run id
-        if: ${{ github.event_name == 'push' }}
+        # TODO if: ${{ github.event_name == 'push' }}
+        if: false
         shell: bash
         run: |
           # Get commit info
@@ -153,10 +154,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_ACCESS_TOKEN }}
       - name: Get current run id
-        if: ${{ github.event_name == 'pull_request' }}
+        # TODO if: ${{ github.event_name == 'pull_request' }}
+        if: false
         shell: bash
         run: |
           echo "RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
+      - name: Get current run id TODO remove
+        shell: bash
+        run: |
+          echo "RUN_ID=8601127083" >> $GITHUB_ENV
   get-images:
     name: Get images
     runs-on: ubuntu-22.04
@@ -257,14 +263,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Download images artifact
-        if: ${{ github.event_name == 'push' }}
+        # TODO if: ${{ github.event_name == 'push' }}
+        if: true
         run: |
           gh run download ${{ needs.get-run-id.outputs.run-id }} -R ${{ github.repository }} -n ${{ env.CHARM_NAME }}-images
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Download images artifact (for testing)
         uses: actions/download-artifact@v4
-        if: ${{ github.event_name == 'pull_request' }}
+        # TODO if: ${{ github.event_name == 'pull_request' }}
+        if: false
         with:
           name: ${{ env.CHARM_NAME }}-images
       - name: Publish image
@@ -391,14 +399,16 @@ jobs:
           fi
           echo "CHARM_NAME=$CHARM_NAME">> $GITHUB_ENV
       - name: Download charm artifact
-        if: ${{ github.event_name == 'push' }}
+        # TODO if: ${{ github.event_name == 'push' }}
+        if: true
         run: |
           gh run download ${{ needs.get-run-id.outputs.run-id }} -R ${{ github.repository }} -n ${{ env.CHARM_NAME }}-charm
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Download charm artifact (for testing)
         uses: actions/download-artifact@v4
-        if: ${{ github.event_name == 'pull_request' }}
+        # TODO if: ${{ github.event_name == 'pull_request' }}
+        if: false
         with:
           name: ${{ env.CHARM_NAME }}-charm
           path: ${{ env.working_directory }}
