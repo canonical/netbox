@@ -12,7 +12,7 @@ env:
   OWNER: ${{ github.repository_owner }}
   REGISTRY: ghcr.io
   channel: latest/edge
-  charm_working_directory: "./charm"
+  charm_directory: "charm"
   charmcraft_ref: feat-12f-django
   charmcraft_repository: weiiwang01/charmcraft
   paas_app_charmer_oci_name: django-app-image
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-22.04
     defaults:
       run:
-        working-directory: ${{ env.charm_working_directory || env.working_directory }}
+        working-directory: ${{ env.working_directory }}/${{ env.charm_directory }}
     steps:
       - uses: actions/checkout@v4.1.1
       - name: Search for docs folder
@@ -58,11 +58,11 @@ jobs:
           discourse_api_key: ${{ secrets.DISCOURSE_API_KEY }}
           dry_run: true
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          charm_dir:  ${{ env.charm_working_directory || env.working_directory }}
+          charm_dir:  ${{ env.working_directory }}/${{ env.charm_directory }}
   vars:
     runs-on: ubuntu-22.04
     outputs:
-      charm_working_directory: ${{ env.charm_working_directory || env.working_directory }}
+      charm_working_directory: ${{ env.working_directory }}/${{ env.charm_directory }}
       channel: ${{ env.channel }}
     steps:
       - run: echo "Exposing env vars"
@@ -79,11 +79,11 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4.1.1
-      - if: env.charm_working_directory != ''
+      - if: ${{ env.working_directory }}/${{ env.charm_directory }} != './/.'
         name: Change directory
         run: |
           TEMP_DIR=$(mktemp -d)
-          cp -rp ./${{env.charm_working_directory}}/. $TEMP_DIR
+          cp -rp ./${{ env.working_directory }}/${{ env.charm_directory }}/. $TEMP_DIR
           rm -rf .* * || :
           cp -rp $TEMP_DIR/. .
           rm -rf $TEMP_DIR
@@ -233,11 +233,11 @@ jobs:
           sudo snap install charmcraft --classic --channel ${{ env.charmcraft_channel }}
   
       - uses: actions/checkout@v4.1.1
-      - if: env.charm_working_directory != ''
+      - if: ${{ env.working_directory }}/${{ env.charm_directory }} != './/.'
         name: Change directory
         run: |
           TEMP_DIR=$(mktemp -d)
-          cp -rp ./${{env.charm_working_directory}}/. $TEMP_DIR
+          cp -rp ./${{ env.working_directory }}/${{ env.charm_directory }}/. $TEMP_DIR
           rm -rf .* * || :
           cp -rp $TEMP_DIR/. .
           rm -rf $TEMP_DIR
@@ -369,13 +369,13 @@ jobs:
           sudo snap install charmcraft --classic --channel ${{ env.charmcraft_channel }}
   
       - uses: actions/checkout@v4.1.1
-      - if: env.charm_working_directory != ''
+      - if: ${{ env.working_directory }}/${{ env.charm_directory }} != './/.'
         name: Change directory
         run: |
           set -x
           ls
           TEMP_DIR=$(mktemp -d)
-          cp -rp ./${{env.charm_working_directory}}/. $TEMP_DIR
+          cp -rp ./${{ env.working_directory }}/${{ env.charm_directory }}/. $TEMP_DIR
           rm -rf .* * || :
           cp -rp $TEMP_DIR/. .
           rm -rf $TEMP_DIR
