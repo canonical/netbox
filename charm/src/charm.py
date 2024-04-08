@@ -93,7 +93,7 @@ class DjangoCharm(paas_app_charmer.django.Charm):
             """
 
             def decorated_get_wsgi_layer() -> ops.pebble.LayerDict:
-                """_wsgi_layer wrapper function.
+                """_wsgi_layer wrapper function that inserts netbox-rq.
 
                 Returns:
                     the pebble layer
