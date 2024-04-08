@@ -41,11 +41,15 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         self.saml = SamlRequires(self)
         self.s3 = S3Requirer(self, self._S3_RELATION_NAME)
 
-        # JAVI monkey patching get_environment
         def get_environment_decorator(
             get_environment_func: typing.Callable[[], dict[str, str]]
         ) -> typing.Callable[[], dict[str, str]]:
-            """TODO.
+            """Decorate for the function to get environment variables.
+
+            At the moment paas-app-charmer does not allow to specify
+            extra environment variables. This disables the possibility of
+            adding extra integrations. As a workaround, decorate (patch)
+            that function using this decorator.
 
             Args:
                get_environment_func: get_environment function.
@@ -53,16 +57,14 @@ class DjangoCharm(paas_app_charmer.django.Charm):
             Returns:
                the decorated get_environment function
             """
-            logger.warning("DECORATING FUNCTION gen_environment")
 
             def decorated_get_environment() -> dict[str, str]:
-                """TODO.
+                """get_environment wrapper function.
 
                 Returns:
-                    env
+                    environment dict
                 """
                 env = get_environment_func()
-                logger.warning("base get_environment: %s", env)
                 env.update(self.gen_extra_env())
                 return env
 
@@ -70,13 +72,18 @@ class DjangoCharm(paas_app_charmer.django.Charm):
 
         self._wsgi_app.gen_environment = get_environment_decorator(self._wsgi_app.gen_environment)
 
-        # JAVI monkey patching wsgi_layer.
-        # an alternative is to call replan twice in
-        # restart. Not nice either.
         def get_wsgi_layer_decorator(
             wsgi_layer: typing.Callable[[], ops.pebble.LayerDict]
         ) -> typing.Callable[[], ops.pebble.LayerDict]:
-            """TODO.
+            """Decorate for the function to get wsgi pebble layer.
+
+            At the moment paas-app-charmer overwrites the pebble layers
+            (using a file in the filesystem). This complicates adding the
+            netbox-rq service, as it needs the environment variables and
+            cannot be just set in the rockcraft.yaml file. This decorator
+            can patch _wsgi_layer, so netbox-rq layer can be inserted.
+            An alternative to would be to call replan twice in the restart
+            function, but that option restarts the services twice.
 
             Args:
                wsgi_layer: wsgi_layer function.
@@ -84,13 +91,12 @@ class DjangoCharm(paas_app_charmer.django.Charm):
             Returns:
                the decorated wsgi_layer function
             """
-            logger.warning("DECORATING FUNCTION wsgi_layer")
 
             def decorated_get_wsgi_layer() -> ops.pebble.LayerDict:
-                """TODO.
+                """_wsgi_layer wrappber function.
 
                 Returns:
-                    env
+                    the pebble layer
                 """
                 layer = wsgi_layer()
                 logger.warning("base layer: %s", layer)
