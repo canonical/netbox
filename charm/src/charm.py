@@ -93,7 +93,7 @@ class DjangoCharm(paas_app_charmer.django.Charm):
             """
 
             def decorated_get_wsgi_layer() -> ops.pebble.LayerDict:
-                """_wsgi_layer wrappber function.
+                """_wsgi_layer wrapper function.
 
                 Returns:
                     the pebble layer
@@ -304,8 +304,6 @@ class DjangoCharm(paas_app_charmer.django.Charm):
             "summary": "NetBox Request Queue Worker",
             "startup": "enabled",
             "command": "/bin/python3 manage.py rqworker high default low",
-            # This probably should not be hardcoded. Update it when we
-            # use the final paas-app-charmer project.
             "working-dir": str(self._charm_state.app_dir),
             "environment": self._wsgi_app.gen_environment(),
             "user": "_daemon_",

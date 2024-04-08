@@ -224,7 +224,7 @@ Returns the set of fields that have been explicitly set on this model instance.
 
 ---
 
-<a href="../../charm/src/charm.py#L359"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L357"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `to_env`
 
