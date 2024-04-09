@@ -179,6 +179,8 @@ jobs:
     needs: [ get-images, get-run-id, get-runner-image]
     if: ${{ needs.get-images.outputs.images != '[]' }}
     steps:
+      - uses: canonical/setup-lxd@v0.1.1
+
       - uses: actions/checkout@v4
         if: env.charmcraft_repository != ''
         with:
