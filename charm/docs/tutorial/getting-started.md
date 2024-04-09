@@ -2,7 +2,7 @@
 
 ## What you’ll do
 - Deploy the NetBox charm.
-- Integrate with redis using redis-k8s charm.
+- Integrate with Redis using the redis-k8s charm.
 - Integrate with the PostgreSQL K8s charm.
 - Integrate with S3 for storage.
 - Expose the NetBox charm with Traefik k8s.
