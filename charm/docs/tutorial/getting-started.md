@@ -2,7 +2,7 @@
 
 ## What you’ll do
 - Deploy the NetBox charm.
-- Use an external Redis server
+- Integrate with Redis using the redis-k8s charm.
 - Integrate with the PostgreSQL K8s charm.
 - Integrate with S3 for storage.
 - Expose the NetBox charm with Traefik k8s.
@@ -49,23 +49,14 @@ juju config nebox django_allowed_hosts='*'
 
 ### Redis
 
-NetBox requires Redis to work. Currently you can configure Redis with 
-configuration options (this will be changed to an integration in the 
-next version).
-
-Deploy redis-k8s:
+NetBox requires Redis to work. You can deploy Redis with redis-k8s:
 ```
 juju deploy redis-k8s --channel=latest/edge
 ```
 
-Get the admin_password:
+Integrate redis-k8s with NetBox with:
 ```
-juju run redis-k8s/0 get-initial-admin-password
-```
-
-Configure NetBox using the previous admin password:
-```
-juju config netbox redis_hostname=redis-k8s-0.redis-k8s-endpoints redis_password=<admin_password>
+juju integrate redis-k8s netbox
 ```
 
 ### Deploy PostgreSQL
@@ -117,7 +108,7 @@ juju run traefik-k8s/0 show-proxied-endpoints --format=yaml
 ## Create superuser
 To be able to login to NetBox, you can create a super user with the next command:
 ```
-juju run netbox/0 create-super-user username=<admin_username> email=<admin_email>
+juju run netbox/0 create-superuser username=<admin_username> email=<admin_email>
 ```
 
 Congratulations, With the username created and the password provided in the response, 
