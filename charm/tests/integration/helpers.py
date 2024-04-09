@@ -57,7 +57,7 @@ async def get_new_admin_token(netbox_app: Application, netbox_base_url: str):
     # Create a superuser
     username = "".join((secrets.choice(string.ascii_letters) for i in range(8)))
     action_create_user: Action = await netbox_app.units[0].run_action(  # type: ignore
-        "create-super-user", username=username, email="admin@example.com"
+        "create-superuser", username=username, email="admin@example.com"
     )
     await action_create_user.wait()
     assert action_create_user.status == "completed"

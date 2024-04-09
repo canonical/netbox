@@ -5,6 +5,7 @@ the [paas-app-charmer](https://github.com/canonical/paas-app-charmer/)
 project. [The paas-app-charmer](https://github.com/canonical/paas-app-charmer/)
 project provides many of the functionalities needed by this charm like:
 - PostgreSQL integration
+- Redis integration
 - Django migrations
 - Ingress integration
 - COS (Prometheus metrics and Loki logs for gunicorn).
@@ -21,9 +22,6 @@ Besides the integrations provided directly by the paas-app-charmer toolchain, th
 integrations are implemented in NetBox:
 - SAML integration.
 - S3 integration.
-
-Currently Redis is configured using environment variables. This will be updated
-to use a Redis integration.
 
 The NetBox charm is designed for a high availability (HA) environment.
 The NetBox application can be scaled to more than one unit to provide

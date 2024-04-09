@@ -228,7 +228,7 @@ async def netbox_app_fixture(
     postgresql_app_name: str,
     get_unit_ips,
     redis_app_name: str,
-    redis_password: str,
+    redis_app: Application,
     postgresql_app: Application,
     pytestconfig: Config,
     s3_netbox_configuration: dict,
@@ -239,15 +239,12 @@ async def netbox_app_fixture(
     resources = {
         "django-app-image": netbox_app_image,
     }
-    redis_ips = await get_unit_ips(redis_app_name)
     app = await model.deploy(
         f"./{netbox_charm}",
         resources=resources,
         config={
-            "redis_hostname": redis_ips[0],
-            "redis_password": redis_password,
             "django_debug": False,
-            "django_allowed_hosts": "*",
+            "django_allowed_hosts": '["*"]',
             "aws_endpoint_url": s3_netbox_configuration["endpoint"],
         },
     )
@@ -257,6 +254,8 @@ async def netbox_app_fixture(
 
     await model.relate(f"{netbox_app_name}:storage", f"{s3_integrator_app_name}")
     await model.relate(f"{netbox_app_name}:postgresql", f"{postgresql_app_name}")
+    await model.relate(f"{netbox_app_name}:redis", f"{redis_app_name}")
+
     await model.wait_for_idle(apps=[netbox_app_name, postgresql_app_name], status="active")
 
     return app
@@ -272,25 +271,6 @@ async def redis_app_fixture(
     app = await model.deploy(redis_app_name, channel="edge")
     await model.wait_for_idle(apps=[redis_app_name], status="active")
     return app
-
-
-@pytest_asyncio.fixture(scope="module", name="redis_password")
-async def redis_password_fixture(
-    model: Model,
-    redis_app: Application,
-    redis_app_name: str,
-) -> str:
-    """Get redis password from action."""
-    password_action: Action = (
-        await model.applications[redis_app_name]
-        .units[0]
-        .run_action(  # type: ignore
-            "get-initial-admin-password",
-        )
-    )
-    await password_action.wait()
-    assert password_action.status == "completed"
-    return password_action.results["redis-password"]
 
 
 @pytest_asyncio.fixture(scope="function", name="netbox_nginx_integration")

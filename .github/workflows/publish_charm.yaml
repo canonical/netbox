@@ -315,6 +315,8 @@ jobs:
     needs: [get-run-id, get-runner-image, publish-images, vars]
     if: ${{ !failure() }}
     steps:
+      - uses: canonical/setup-lxd@v0.1.1
+
       - uses: actions/checkout@v4
         if: env.charmcraft_repository != ''
         with:
@@ -372,8 +374,6 @@ jobs:
       - if: ${{ env.working_directory }}/${{ env.charm_directory }} != './/.'
         name: Change directory
         run: |
-          set -x
-          ls
           TEMP_DIR=$(mktemp -d)
           cp -rp ./${{ env.working_directory }}/${{ env.charm_directory }}/. $TEMP_DIR
           rm -rf .* * || :
@@ -383,7 +383,6 @@ jobs:
       - name: Get charm name
         id: get-charm-name
         run: |
-          set -x
           CHARM_NAME="$([ -f metadata.yaml ] && yq '.name' metadata.yaml || echo UNKNOWN)"
           if [ "$CHARM_NAME" == "UNKNOWN" ]; then
             CHARM_NAME="$([ -f charmcraft.yaml ] && yq '.name' charmcraft.yaml || echo UNKNOWN)"

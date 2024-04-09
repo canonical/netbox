@@ -16,7 +16,7 @@ Django Charm entrypoint.
 ## <kbd>class</kbd> `DjangoCharm`
 Django Charm service. 
 
-<a href="../../charm/src/charm.py#L35"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L34"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `__init__`
 
@@ -73,12 +73,12 @@ Unit that this execution is responsible for.
 
 ---
 
-<a href="../../charm/src/charm.py#L52"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L118"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-### <kbd>function</kbd> `gen_env`
+### <kbd>function</kbd> `gen_extra_env`
 
 ```python
-gen_env() → dict[str, str]
+gen_extra_env() → dict[str, str]
 ```
 
 Return the environment variables for django scripts. 
@@ -90,19 +90,36 @@ Return the environment variables for django scripts.
 
 ---
 
-<a href="../../charm/src/charm.py#L157"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L223"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-### <kbd>function</kbd> `reconcile`
+### <kbd>function</kbd> `is_ready`
 
 ```python
-reconcile() → None
+is_ready() → bool
 ```
 
-Reconcile all services. 
+Check if the charm is ready to start the workload application. 
+
+
+
+**Returns:**
+  True if the charm is ready to start the workload application. 
 
 ---
 
-<a href="../../charm/src/charm.py#L71"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L248"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+
+### <kbd>function</kbd> `restart`
+
+```python
+restart() → None
+```
+
+Restart all services. 
+
+---
+
+<a href="../../charm/src/charm.py#L137"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `s3_env`
 
@@ -121,7 +138,7 @@ This should disappear/get updated once paas-app-charmer project supports the S3 
 
 ---
 
-<a href="../../charm/src/charm.py#L87"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L153"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `saml_env`
 
@@ -138,7 +155,7 @@ Environment variables for SAML.
 
 ---
 
-<a href="../../charm/src/charm.py#L206"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L286"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `workload`
 
@@ -181,11 +198,33 @@ Configuration for accessing S3 bucket.
 
 Translates s3_uri_style to AWS addressing_style. 
 
+---
+
+#### <kbd>property</kbd> model_extra
+
+Get extra fields set during validation. 
+
+
+
+**Returns:**
+  A dictionary of extra fields, or `None` if `config.extra` is not set to `"allow"`. 
+
+---
+
+#### <kbd>property</kbd> model_fields_set
+
+Returns the set of fields that have been explicitly set on this model instance. 
+
+
+
+**Returns:**
+  A set of strings representing the fields that have been set,  i.e. that were not filled from defaults. 
+
 
 
 ---
 
-<a href="../../charm/src/charm.py#L314"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L357"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `to_env`
 
