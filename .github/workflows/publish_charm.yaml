@@ -273,6 +273,7 @@ jobs:
           CHARMCRAFT_ENABLE_EXPERIMENTAL_EXTENSIONS: "true"
           CHARMCRAFT_AUTH:  ${{ secrets.CHARMHUB_TOKEN }}
         run: |
+          set -x
           charm=${{ env.CHARM_NAME }}
           declare -a resources
           declare -a images
@@ -304,6 +305,7 @@ jobs:
                 resource_name=$(echo $image | awk -F '/' '{print $NF}' | cut -d ':' -f 1)-image
             fi
             
+            echo resource name: -"${resource_name}"-
             if [[ " ${resources[@]} " =~ " $resource_name " ]]; then
               docker pull $image
               image_id=$(docker images $image --format "{{.ID}}")
