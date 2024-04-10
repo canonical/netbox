@@ -26,6 +26,10 @@ description: |
 
 links:
   documentation: https://discourse.charmhub.io/t/netbox-documentation-overview/13564
+  issues: https://github.com/canonical/netbox/issues
+  source: https://github.com/canonical/netbox
+  website:
+    - https://github.com/canonical/netbox
 
 extensions:
   - django-framework
