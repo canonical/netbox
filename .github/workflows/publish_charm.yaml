@@ -294,6 +294,7 @@ jobs:
 
           echo resources: -"${resources[@]}"-
           echo images: -"${images[@]}"-
+          echo env.paas_app_charmer_oci_name: -"${{ env.paas_app_charmer_oci_name }}"-
           
           for image in "${images[@]}"; do
             if [[ "${{ env.paas_app_charmer_oci_name }}" != "" ]]; then
