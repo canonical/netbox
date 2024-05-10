@@ -24,84 +24,6 @@ parts:
     # Until paas-app-charmer project supports the NetBox
     # directory organisation, this changes are needed.
     django-framework/install-app:
-        prime:
-            - "django/app/account"
-            - "django/app/circuits"
-            - "django/app/core"
-            - "django/app/dcim"
-            - "django/app/extras"
-            - "django/app/generate_secret_key.py"
-            - "django/app/ipam"
-            - "django/app/manage.py"
-            - "django/app/media"
-            - "django/app/netbox"
-            - "django/app/project-static"
-            - "django/app/reports"
-            - "django/app/scripts"
-            - "django/app/static"
-            - "django/app/templates"
-            - "django/app/tenancy"
-            - "django/app/translations"
-            - "django/app/users"
-            - "django/app/utilities"
-            - "django/app/virtualization"
-            - "django/app/vpn"
-            - "django/app/wireless"
-        stage:
-            - "django/app/account"
-            - "django/app/circuits"
-            - "django/app/core"
-            - "django/app/dcim"
-            - "django/app/extras"
-            - "django/app/generate_secret_key.py"
-            - "django/app/ipam"
-            - "django/app/manage.py"
-            - "django/app/media"
-            - "django/app/netbox"
-            - "django/app/project-static"
-            - "django/app/reports"
-            - "django/app/scripts"
-            - "django/app/static"
-            - "django/app/templates"
-            - "django/app/tenancy"
-            - "django/app/translations"
-            - "django/app/users"
-            - "django/app/utilities"
-            - "django/app/virtualization"
-            - "django/app/vpn"
-            - "django/app/wireless"
-        organize:
-            account: "django/app/account"
-            circuits: "django/app/circuits"
-            core: "django/app/core"
-            dcim: "django/app/dcim"
-            extras: "django/app/extras"
-            generate_secret_key.py: "django/app/generate_secret_key.py"
-            ipam: "django/app/ipam"
-            manage.py: "django/app/manage.py"
-            media: "django/app/media"
-            netbox: "django/app/netbox"
-            project-static: "django/app/project-static"
-            reports: "django/app/reports"
-            scripts: "django/app/scripts"
-            static: "django/app/static"
-            templates: "django/app/templates"
-            tenancy: "django/app/tenancy"
-            translations: "django/app/translations"
-            users: "django/app/users"
-            utilities: "django/app/utilities"
-            virtualization: "django/app/virtualization"
-            vpn: "django/app/vpn"
-            wireless: "django/app/wireless"
-        override-pull: |-
-            craftctl default
-            # We need to overwrite the settings and set the configuration.
-            # We could use a different DJANGO_SETTINGS_MODULE env var, but has to be
-            # used everywhere in that case.
-            [ ! -d netbox.orig ] && mv netbox netbox.orig && cp -R netbox.orig/* .
-            cp charm/netbox_configuration.py ./netbox/configuration.py
-            [ ! -f netbox/original_settings.py ] && mv netbox/settings.py netbox/original_settings.py
-            cp charm/netbox_settings.py ./netbox/settings.py
         after:
             - django-framework/dependencies
         override-build: |-
@@ -158,10 +80,6 @@ parts:
       plugin: nil
 
 services:
-  django:
-    override: merge
-    # Update from netbox.netbox.wsgi to netbox.wsgi
-    command: /bin/python3 -m gunicorn -c /django/gunicorn.conf.py netbox.wsgi:application
   cron:
     override: merge
     summary: "Cron Service"
