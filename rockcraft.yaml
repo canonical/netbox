@@ -64,6 +64,8 @@ parts:
             # https://github.com/SAML-Toolkits/python3-saml/issues/389
             # Using this trick to not install it from binary and compile it instead.
             - "--no-binary=lxml"
+            - xmlsec
+            - "--no-binary=xmlsec"
             # For remote data sources
             - boto3
             - dulwich

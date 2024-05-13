@@ -113,7 +113,7 @@ async def nginx_app_fixture(
 ) -> Application:
     """Deploy nginx."""
     async with ops_test.fast_forward():
-        app = await model.deploy(nginx_app_name, channel="latest/edge", revision=88, trust=True)
+        app = await model.deploy(nginx_app_name, channel="latest/edge", revision=99, trust=True)
         await model.wait_for_idle()
     return app
 
