@@ -1,0 +1,157 @@
+# multipass launch --cloud-init charm-dev-juju-3.1.yaml --timeout 1200 --name netbox --memory 4G --cpus 3 --disk 30G -vvvv
+# VMIP=$(multipass info --all --format json | jq -r ".info.netbox.ipv4[0]")
+# printf "\n${VMIP} netbox.internal # DELETE WHEN DONE\n" | sudo tee -a /etc/hosts
+
+package_update: true
+
+packages:
+- python3-pip
+- jq
+- sysstat
+- zsh
+- fzf
+- tox
+- gnome-keyring
+- kitty-terminfo
+- sshfs
+
+snap:
+  commands:
+  - snap install juju --channel=3.1/stable
+  - snap install microk8s --channel 1.29-strict/stable
+  - snap alias microk8s.kubectl kubectl
+  - snap alias microk8s.kubectl k
+  - snap install --classic charmcraft
+  - snap install --classic snapcraft
+  - snap install jhack --channel=latest/stable
+  - snap install yq
+  - snap install aws-cli --classic
+  - snap install multipass-sshfs
+  - snap refresh
+
+runcmd:
+- DEBIAN_FRONTEND=noninteractive apt-get remove -y landscape-client landscape-common adwaita-icon-theme humanity-icon-theme
+- DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
+- DEBIAN_FRONTEND=noninteractive apt-get -y autoremove
+
+- |
+  # disable swap
+  sysctl -w vm.swappiness=0
+  echo "vm.swappiness = 0" | tee -a /etc/sysctl.conf
+  swapoff -a
+
+- |
+  # disable unnecessary services
+  systemctl disable man-db.timer man-db.service --now
+  systemctl disable apport.service apport-autoreport.service  --now
+  systemctl disable apt-daily.service apt-daily.timer --now
+  systemctl disable apt-daily-upgrade.service apt-daily-upgrade.timer --now
+  systemctl disable unattended-upgrades.service --now
+  systemctl disable motd-news.service motd-news.timer --now
+  systemctl disable bluetooth.target --now
+  systemctl disable ua-messaging.service ua-messaging.timer --now
+  systemctl disable ua-timer.timer ua-timer.service --now
+  systemctl disable systemd-tmpfiles-clean.timer --now
+
+  # Disable IPv6
+  echo "net.ipv6.conf.all.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  echo "net.ipv6.conf.default.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  echo "net.ipv6.conf.lo.disable_ipv6=1" | tee -a /etc/sysctl.conf
+  sysctl -p
+
+- |
+  # setup charmcraft
+  lxd init --auto
+  adduser ubuntu lxd
+
+- |
+  # Make sure juju directory is there
+  sudo -u ubuntu mkdir -p /home/ubuntu/.local/share/juju
+
+- |
+  # setup microk8s and bootstrap
+  sudo usermod -a -G snap_microk8s ubuntu
+  sudo -u ubuntu mkdir -p /home/ubuntu/.kube
+  adduser ubuntu microk8s
+  microk8s status --wait-ready
+
+  microk8s.enable metrics-server
+  microk8s.kubectl rollout status deployments/metrics-server -n kube-system -w --timeout=600s
+
+  # The dns addon will restart the api server so you may see a blip in the availability
+  # Separating addons to avoid errors such as
+  # dial tcp 127.0.0.1:16443: connect: connection refused
+  microk8s.enable dns storage rbac
+  microk8s.kubectl rollout status deployments/coredns -n kube-system -w --timeout=600s
+
+  microk8s.enable hostpath-storage
+  microk8s.enable ingress
+  # wait for storage, ingress to become available
+  microk8s.kubectl rollout status deployments/hostpath-provisioner -n kube-system -w --timeout=600s
+  microk8s.kubectl rollout status daemonsets/nginx-ingress-microk8s-controller -n ingress -w --timeout=600s
+
+  sudo -u ubuntu juju bootstrap microk8s microk8s
+
+  # dump config (this is needed for utils such as k9s or kdash)
+  microk8s config | sudo -u ubuntu tee /home/ubuntu/.kube/config > /dev/null
+
+  # # bootstrap lxd
+  # sudo -u ubuntu juju bootstrap localhost lxd
+
+  # We need to connect the dot-local-share-juju interface with jhack
+  sudo snap connect jhack:dot-local-share-juju snapd
+
+- |
+  # Install NetBox
+  echo Install NetBox 
+  sudo -u ubuntu bash <<'EOF'
+    set -x
+    NETBOX_HOSTNAME=netbox.internal
+
+    juju switch microk8s
+    juju add-model tools
+    juju switch tools
+    juju deploy minio --channel edge
+    sleep 2
+    juju config minio secret-key=supersuperkey
+    juju wait-for application minio --query='name=="minio" && (status=="active" || status=="blocked")'
+    sleep 2
+
+    # FIXME! This will break after ips change. 
+    MINIO_URL=http://$(juju status minio/leader -m microk8s:tools  --format=yaml | yq ".applications.minio.address"):9000
+
+    export AWS_ENDPOINT=${MINIO_URL}
+    export AWS_ENDPOINT_URL=${AWS_ENDPOINT}
+    export AWS_IGNORE_CONFIGURED_ENDPOINT_URLS=${AWS_IGNORE_CONFIGURED_ENDPOINT_URLS}
+    export AWS_ACCESS_KEY_ID=minio
+    export AWS_SECRET_ACCESS_KEY=supersuperkey
+
+    aws configure set profile.default.aws_access_key_id "${AWS_ACCESS_KEY_ID}"
+    aws configure set profile.default.aws_secret_access_key "${AWS_SECRET_ACCESS_KEY}"
+    aws configure set profile.default.region us-west-1
+    aws configure set profile.default.s3.signature_version s3v4
+
+    aws-cli.aws s3api create-bucket --bucket netbox
+    aws-cli.aws s3api list-buckets
+    
+    juju deploy netbox --channel latest/edge
+    juju config netbox django_allowed_hosts='["*"]'
+    juju deploy redis-k8s --channel=latest/edge
+    juju integrate redis-k8s netbox
+    juju deploy postgresql-k8s --channel 14/stable --trust
+    juju integrate postgresql-k8s netbox
+
+    juju deploy s3-integrator --channel edge
+    juju config s3-integrator endpoint=${AWS_ENDPOINT} bucket=netbox path=/ region=us-west-1 s3-uri-style=path
+    juju wait-for application s3-integrator --query='name=="s3-integrator" && (status=="active" || status=="blocked")'
+    juju run s3-integrator/leader sync-s3-credentials access-key=${AWS_ACCESS_KEY_ID} secret-key=${AWS_SECRET_ACCESS_KEY}
+    juju integrate s3-integrator netbox
+
+    juju deploy nginx-ingress-integrator --revision 99 --channel latest/edge --trust
+    juju config nginx-ingress-integrator service-hostname=${NETBOX_HOSTNAME} path-routes=/
+
+    juju integrate nginx-ingress-integrator netbox
+  EOF
+
+
+final_message: "The system is finally up, after $UPTIME seconds"
