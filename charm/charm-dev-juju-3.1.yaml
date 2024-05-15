@@ -1,6 +1,16 @@
 # multipass launch --cloud-init charm-dev-juju-3.1.yaml --timeout 1200 --name netbox --memory 4G --cpus 3 --disk 30G -vvvv
+# multipass exec netbox -- juju run traefik-k8s/0 show-proxied-endpoints --format=yaml
+# multipass exec netbox -- juju run netbox/leader create-superuser username=admin email=netbox@example.com
+# multipass delete netbox --purge
+
+# to check the state of the installation (after a few minutes after launching):
+# multipass exec netbox -- tail -f /var/log/cloud-init-output.log -f
+
+
+# not necessary with traefik in path mode:
 # VMIP=$(multipass info --all --format json | jq -r ".info.netbox.ipv4[0]")
 # printf "\n${VMIP} netbox.internal # DELETE WHEN DONE\n" | sudo tee -a /etc/hosts
+
 
 package_update: true
 
@@ -85,10 +95,8 @@ runcmd:
   microk8s.kubectl rollout status deployments/coredns -n kube-system -w --timeout=600s
 
   microk8s.enable hostpath-storage
-  microk8s.enable ingress
-  # wait for storage, ingress to become available
+  # wait for storage to become available
   microk8s.kubectl rollout status deployments/hostpath-provisioner -n kube-system -w --timeout=600s
-  microk8s.kubectl rollout status daemonsets/nginx-ingress-microk8s-controller -n ingress -w --timeout=600s
 
   sudo -u ubuntu juju bootstrap microk8s microk8s
 
@@ -109,16 +117,17 @@ runcmd:
     NETBOX_HOSTNAME=netbox.internal
 
     juju switch microk8s
-    juju add-model tools
-    juju switch tools
+    juju add-model netbox
+    juju switch netbox
     juju deploy minio --channel edge
-    sleep 2
+    sleep 5
     juju config minio secret-key=supersuperkey
-    juju wait-for application minio --query='name=="minio" && (status=="active" || status=="blocked")'
-    sleep 2
+    # juju wait-for application minio --query='name=="minio" && (status=="active" || status=="blocked")'
+    juju wait-for application minio
+    sleep 5
 
     # FIXME! This will break after ips change. 
-    MINIO_URL=http://$(juju status minio/leader -m microk8s:tools  --format=yaml | yq ".applications.minio.address"):9000
+    MINIO_URL=http://$(juju status minio/leader -m microk8s:netbox  --format=yaml | yq ".applications.minio.address"):9000
 
     export AWS_ENDPOINT=${MINIO_URL}
     export AWS_ENDPOINT_URL=${AWS_ENDPOINT}
@@ -142,15 +151,24 @@ runcmd:
     juju integrate postgresql-k8s netbox
 
     juju deploy s3-integrator --channel edge
-    juju config s3-integrator endpoint=${AWS_ENDPOINT} bucket=netbox path=/ region=us-west-1 s3-uri-style=path
+    juju config s3-integrator endpoint=minio-0.minio-endpoints bucket=netbox path=/ region=us-west-1 s3-uri-style=path
     juju wait-for application s3-integrator --query='name=="s3-integrator" && (status=="active" || status=="blocked")'
     juju run s3-integrator/leader sync-s3-credentials access-key=${AWS_ACCESS_KEY_ID} secret-key=${AWS_SECRET_ACCESS_KEY}
     juju integrate s3-integrator netbox
 
-    juju deploy nginx-ingress-integrator --revision 99 --channel latest/edge --trust
-    juju config nginx-ingress-integrator service-hostname=${NETBOX_HOSTNAME} path-routes=/
+    # microk8s.enable ingress
+    # microk8s.kubectl rollout status daemonsets/nginx-ingress-microk8s-controller -n ingress -w --timeout=600s
+    # juju deploy nginx-ingress-integrator --revision 99 --channel latest/edge --trust
+    # juju config nginx-ingress-integrator service-hostname=${NETBOX_HOSTNAME} path-routes=/
+    # juju integrate nginx-ingress-integrator netbox
 
-    juju integrate nginx-ingress-integrator netbox
+    IPADDR=$(ip -4 -j route get 2.2.2.2 | jq -r '.[] | .prefsrc')
+    sudo microk8s enable metallb:$IPADDR-$IPADDR
+    juju deploy traefik-k8s --channel edge --trust
+    # juju config traefik-k8s external_hostname=${NETBOX_HOSTNAME}
+    juju config traefik-k8s routing_mode=path
+    juju integrate traefik-k8s netbox
+    juju wait-for application netbox
   EOF
 
 
