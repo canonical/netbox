@@ -1,4 +1,5 @@
-# multipass launch --cloud-init charm-dev-juju-3.1.yaml --timeout 1200 --name netbox --memory 4G --cpus 3 --disk 30G -vvvv
+# multipass launch --cloud-init charm-dev-juju-3.1.yaml --timeout 1800 --name netbox --memory 4G --cpus 3 --disk 30G -vvvv
+# multipass launch --cloud-init https://raw.githubusercontent.com/canonical/netbox/multipass-info/charm/charm-dev-juju-3.1.yaml --timeout 1800 --name netbox --memory 4G --cpus 3 --disk 30G -vvvv
 # multipass exec netbox -- juju run traefik-k8s/0 show-proxied-endpoints --format=yaml
 # multipass exec netbox -- juju run netbox/leader create-superuser username=admin email=netbox@example.com
 # multipass delete netbox --purge
