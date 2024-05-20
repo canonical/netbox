@@ -243,9 +243,9 @@ async def netbox_app_fixture(
         f"./{netbox_charm}",
         resources=resources,
         config={
-            "django_debug": False,
-            "django_allowed_hosts": '["*"]',
-            "aws_endpoint_url": s3_netbox_configuration["endpoint"],
+            "django-debug": False,
+            "django-allowed-hosts": '["*"]',
+            "aws-endpoint-url": s3_netbox_configuration["endpoint"],
         },
     )
     # If update_status comes before pebble ready, the unit gets to
@@ -317,9 +317,9 @@ async def netbox_saml_integration_fixture(
     """Integrate Netbox and SAML for saml integration."""
     await netbox_app.set_config(
         {
-            "saml_sp_entity_id": f"https://{netbox_hostname}",
+            "saml-sp-entity-id": f"https://{netbox_hostname}",
             # The saml Name for FriendlyName "uid"
-            "saml_username": "urn:oid:0.9.2342.19200300.100.1.1",
+            "saml-username": "urn:oid:0.9.2342.19200300.100.1.1",
         }
     )
     saml_helper.prepare_pod(model.name, f"{saml_app.name}-0")

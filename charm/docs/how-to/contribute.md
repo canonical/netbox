@@ -106,10 +106,10 @@ juju integrate redis-k8s netbox
 NetBox is built using Django. It is necessary to set the
 allowed hosts for it to work. For development (not recommended
 for production environments), you can allow all hosts using
-the configuration option `django_allowed_hosts` like:
+the configuration option `django-allowed-hosts` like:
 
 ```bash
-juju config netbox django_allowed_hosts='["*"]'
+juju config netbox django-allowed-hosts='["*"]'
 ```
 
 The NetBox charm requires a postgresql_client interface to work.

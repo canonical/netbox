@@ -51,21 +51,21 @@ requires:
 
 config:
   options:
-    saml_sp_entity_id:
+    saml-sp-entity-id:
       description: |-
         SAML SP entity id.
       type: string
-    saml_username:
+    saml-username:
       description: |-
         SAML attribute used for both the social uid and the username.
         NameID can be used setting this config to 'name.
       type: string
       default: 'name'
-    saml_email:
+    saml-email:
       description: |-
         SAML attribute used for the email.
       type: string
-    aws_endpoint_url:
+    aws-endpoint-url:
       description: |-
         Environment variable for AWS_ENDPOINT_URL.
         This variable has to be set to the S3 compatible server that will host
