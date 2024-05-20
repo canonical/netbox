@@ -15,6 +15,6 @@ jobs:
       channel: 1.28-strict/stable
       rockcraft-repository: javierdelapuente/rockcraft
       rockcraft-ref: django-extension-install-app-merge
-      charmcraft-repository: weiiwang01/charmcraft
-      charmcraft-ref: feat-12f-django
+      charmcraft-repository: jdkandersson/charmcraft
+      charmcraft-ref: feature/12f
       charm-directory: "charm"

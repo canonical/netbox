@@ -44,8 +44,6 @@ parts:
             group: 584792
 
     django-framework/dependencies:
-        overlay-packages:
-            - ca-certificates
         # pyproject.toml breaks the build. Remove it.
         override-build: |-
             rm -f pyproject.toml
@@ -53,22 +51,6 @@ parts:
         build-packages:
             - pkg-config
             - libxmlsec1-dev
-        python-packages:
-            - django-storages[s3]
-            # needed to serve static assets.
-            - whitenoise
-            # Needed for SAML
-            - python3-saml
-            - lxml
-            # saml library crashes (SEGFAULT) with lxml installed from binary.
-            # https://github.com/SAML-Toolkits/python3-saml/issues/389
-            # Using this trick to not install it from binary and compile it instead.
-            - "--no-binary=lxml"
-            - xmlsec
-            - "--no-binary=xmlsec"
-            # For remote data sources
-            - boto3
-            - dulwich
         stage-packages:
             # needed for saml
             - libxmlsec1

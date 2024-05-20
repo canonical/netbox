@@ -34,15 +34,6 @@ links:
 extensions:
   - django-framework
 
-actions:
-  # With the next charmcraft create-superuser action should not be here
-  create-superuser:
-    description: Create a super user
-    username:
-      type: string
-    email:
-      type: string
-
 requires:
   postgresql:
     interface: postgresql_client
@@ -81,11 +72,3 @@ config:
         data sources if they are not hosted in Amazon S3.
         See https://github.com/netbox-community/netbox/issues/15427
       type: string
-
-parts:
-  charm:
-    override-build: |-
-      rustup default stable
-      craftctl default
-    build-snaps:
-      - rustup
