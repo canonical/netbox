@@ -244,7 +244,7 @@ async def netbox_app_fixture(
         resources=resources,
         config={
             "django-debug": False,
-            "django-allowed-hosts": '["*"]',
+            "django-allowed-hosts": '*',
             "aws-endpoint-url": s3_netbox_configuration["endpoint"],
         },
     )
