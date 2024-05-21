@@ -33,8 +33,6 @@ parts:
             craftctl default
         override-prime: |-
             craftctl default
-            # Until paas-app-charmer provides a direct migrate for Django
-            echo -e '#!/bin/bash\nexec python3 manage.py migrate'  > "${CRAFT_PRIME}/django/app/migrate.sh"
         permissions:
           - path: django/app/reports
             owner: 584792
@@ -44,10 +42,6 @@ parts:
             group: 584792
 
     django-framework/dependencies:
-        # pyproject.toml breaks the build. Remove it.
-        override-build: |-
-            rm -f pyproject.toml
-            craftctl default
         build-packages:
             - pkg-config
             - libxmlsec1-dev
