@@ -20,9 +20,6 @@ extensions:
     - django-framework
 
 parts:
-    # NetBox project does not suit the paas-app-charmer project yet.
-    # Until paas-app-charmer project supports the NetBox
-    # directory organisation, this changes are needed.
     django-framework/install-app:
         after:
             - django-framework/dependencies
