@@ -31,8 +31,6 @@ parts:
             # Some missing env vars like DJANGO_SECRET_KEY...
             NETBOX_CONFIGURATION=netbox.configuration_testing PYTHONUSERBASE=${CRAFT_STAGE} python3 manage.py collectstatic --no-input
             craftctl default
-        override-prime: |-
-            craftctl default
         permissions:
           - path: django/app/reports
             owner: 584792
