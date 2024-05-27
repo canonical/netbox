@@ -20,22 +20,6 @@ extensions:
     - django-framework
 
 parts:
-    django-framework/install-app:
-        after:
-            - django-framework/dependencies
-        override-build: |-
-            # At this point, the original configuration does not work correctly.
-            # Some missing env vars like DJANGO_SECRET_KEY...
-            NETBOX_CONFIGURATION=netbox.configuration_testing PYTHONUSERBASE=${CRAFT_STAGE} python3 manage.py collectstatic --no-input
-            craftctl default
-        permissions:
-          - path: django/app/reports
-            owner: 584792
-            group: 584792
-          - path: django/app/scripts
-            owner: 584792
-            group: 584792
-
     django-framework/dependencies:
         build-packages:
             - pkg-config
@@ -49,6 +33,19 @@ parts:
       stage-packages:
         - cron
       plugin: nil
+
+    netbox-post-process:
+        after:
+            - django-framework/dependencies
+            - django-framework/install-app
+        plugin: nil
+        override-prime: |-
+            # At this point, the original configuration does not work correctly.
+            # Some missing env vars like DJANGO_SECRET_KEY...
+            NETBOX_CONFIGURATION=netbox.configuration_testing PYTHONUSERBASE=${CRAFT_PRIME} python3 ${CRAFT_PRIME}/django/app/manage.py collectstatic --no-input
+            # Reports and scripts are written by the _daemon_ user.
+            chown 584792:584792 django/app/reports
+            chown 584792:584792 django/app/scripts
 
 services:
   cron:
