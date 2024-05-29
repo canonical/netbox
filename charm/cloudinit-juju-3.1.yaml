@@ -113,6 +113,8 @@ runcmd:
     juju deploy minio --channel edge
     sleep 5
     juju config minio secret-key=supersuperkey
+    export AWS_ACCESS_KEY_ID=minio
+    export AWS_SECRET_ACCESS_KEY=supersuperkey
     
     juju deploy netbox --channel latest/edge
     juju config netbox django_allowed_hosts='["*"]'
@@ -140,8 +142,6 @@ runcmd:
     export AWS_ENDPOINT=${MINIO_URL}
     export AWS_ENDPOINT_URL=${AWS_ENDPOINT}
     export AWS_IGNORE_CONFIGURED_ENDPOINT_URLS=${AWS_IGNORE_CONFIGURED_ENDPOINT_URLS}
-    export AWS_ACCESS_KEY_ID=minio
-    export AWS_SECRET_ACCESS_KEY=supersuperkey
 
     aws configure set profile.default.aws_access_key_id "${AWS_ACCESS_KEY_ID}"
     aws configure set profile.default.aws_secret_access_key "${AWS_SECRET_ACCESS_KEY}"
