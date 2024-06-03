@@ -18,9 +18,10 @@ platforms:
 # should have an `wsgi.py` file with an `application` object as the WSGI entrypoint.
 extensions:
     - django-framework
-
 parts:
     django-framework/dependencies:
+        overlay-packages:
+            - ca-certificates
         build-packages:
             - pkg-config
             - libxmlsec1-dev
@@ -28,7 +29,9 @@ parts:
             # needed for saml
             - libxmlsec1
             - libxmlsec1-openssl
-
+        override-build: |-
+            rm -f pyproject.toml
+            craftctl default
     cron:
       stage-packages:
         - cron
