@@ -32,6 +32,9 @@ parts:
         override-build: |-
             rm -f pyproject.toml
             craftctl default
+        python-requirements:
+          - requirements.txt
+          - requirements-charm.txt
     cron:
       stage-packages:
         - cron
