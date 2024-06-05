@@ -16,10 +16,7 @@ if 'DJANGO_AWS_ENDPOINT_URL' in os.environ:
 # This is a list of valid fully-qualified domain names (FQDNs) for the NetBox server. NetBox will not permit write
 # access to the server via any other hostnames. The first FQDN in the list will be treated as the preferred name.
 #
-
-# The double prefix DJANGO_DJANGO is probably related to discrepancies between the charmcraft version
-# and the paas-app-charmer version. Wait until charmcraft is merged in main to report.
-ALLOWED_HOSTS = json.loads(os.environ.get("DJANGO_DJANGO_ALLOWED_HOSTS", "[]"))
+ALLOWED_HOSTS = json.loads(os.environ.get("DJANGO_ALLOWED_HOSTS", "[]"))
 
 # PostgreSQL database configuration. See the Django documentation for a complete list of available parameters:
 #   https://docs.djangoproject.com/en/stable/ref/settings/#databases

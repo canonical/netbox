@@ -5,7 +5,7 @@ import os
 import platform
 import sys
 import warnings
-from urllib.parse import urlencode, urlsplit
+from urllib.parse import urlencode, urlparse, urlsplit
 
 import django
 import requests
@@ -385,6 +385,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django_htmx.middleware.HtmxMiddleware',
     'netbox.middleware.RemoteUserMiddleware',
     'netbox.middleware.CoreMiddleware',
@@ -824,3 +825,16 @@ try:
     _UNSUPPORTED_SETTINGS = True
 except ImportError:
     pass
+
+# This is also required for Traefik k8s charm to work in routing mode
+# path. The reason is that when the proxied url is something like
+# http://url/path, the url called by the ingress is really
+# http://service/, without the path.  See also
+# https://github.com/evansd/whitenoise/issues/271
+base_url = os.environ.get('DJANGO_BASE_URL', '/')
+parsed_base_url = urlparse(base_url)
+
+WHITENOISE_STATIC_PREFIX = STATIC_URL
+STATIC_URL = f"{parsed_base_url.path}/{STATIC_URL}"
+FORCE_SCRIPT_NAME = f"{parsed_base_url.path}"
+MEDIA_URL = f"{parsed_base_url.path}/{MEDIA_URL}"
