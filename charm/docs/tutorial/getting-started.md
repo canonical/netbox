@@ -44,7 +44,7 @@ storage, Redis or PostgreSQL.
 Set the allowed hosts. In this example every host is allowed. For a production environment
 only the used hosts should be allowed.
 ```
-juju config netbox django-allowed-hosts='["*"]'
+juju config netbox django-allowed-hosts='*'
 ```
 
 ### Redis

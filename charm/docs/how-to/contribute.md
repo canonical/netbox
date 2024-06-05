@@ -109,7 +109,7 @@ for production environments), you can allow all hosts using
 the configuration option `django-allowed-hosts` like:
 
 ```bash
-juju config netbox django-allowed-hosts='["*"]'
+juju config netbox django-allowed-hosts='*'
 ```
 
 The NetBox charm requires a postgresql_client interface to work.
