@@ -61,5 +61,5 @@ multipass exec netbox -- tail -f /var/log/cloud-init-output.log
 
 And the commands executed with:
 ```
-multipass exec netbox -- tail -f /var/log/cloud-init.log -f
+multipass exec netbox -- tail -f /var/log/cloud-init.log
 ```
