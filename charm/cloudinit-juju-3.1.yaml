@@ -29,6 +29,7 @@ packages:
 - jq
 - gnome-keyring
 - sshfs
+- docker.io
 
 snap:
   commands:
@@ -37,24 +38,7 @@ snap:
   - snap alias microk8s.kubectl kubectl
   - snap alias microk8s.kubectl k
   - snap install yq
-  - snap install aws-cli --classic
   - snap install multipass-sshfs
-
-write_files:
-  - path: /tmp/traefik_juju_minio.yaml
-    content: |
-      http:
-        routers:
-          juju-netbox-minio-router:
-            entryPoints:
-            - web
-            rule: PathPrefix(`/`)
-            service: juju-netbox-minio-service
-        services:
-          juju-netbox-minio-service:
-            loadBalancer:
-              servers:
-              - url: http://minio-0.minio-endpoints:9000
 
 runcmd:
 
@@ -90,7 +74,11 @@ runcmd:
 
 - |
   # setup microk8s and bootstrap
-  usermod -a -G snap_microk8s ubuntu
+  adduser ubuntu snap_microk8s
+
+- |
+  # prepare docker user
+  adduser ubuntu docker
 
 - |
   sudo -u ubuntu mkdir -p /home/ubuntu/.kube
@@ -123,6 +111,13 @@ runcmd:
     set -x
 
     IPADDR=$(ip -4 -j route get 2.2.2.2 | jq -r '.[] | .prefsrc')
+    # Run docker minio
+    mkdir -p ${HOME}/minio/data
+    docker run -d -p 9000:9000 -p 9001:9001 --user $(id -u):$(id -g) --name minio -e "MINIO_ROOT_USER=minioadmin" -e "MINIO_ROOT_PASSWORD=minioadmin" -v ${HOME}/minio/data:/data quay.io/minio/minio server /data --console-address ":9001"
+
+    export AWS_ACCESS_KEY_ID=minio
+    export AWS_SECRET_ACCESS_KEY=supersuperkey
+
     sudo microk8s enable metallb:$IPADDR-$IPADDR
     
     NETBOX_HOSTNAME=netbox.internal
@@ -130,17 +125,16 @@ runcmd:
     juju switch microk8s
     juju add-model netbox
     juju switch netbox
+    juju model-config update-status-hook-interval=100s
+    juju model-config "logging-config=<root>=INFO;unit=DEBUG"
 
     # Deploy everything together to try to speed up the process
     juju deploy postgresql-k8s --channel 14/stable --trust
-    juju deploy minio --channel edge
     juju deploy netbox --channel latest/edge
     juju deploy redis-k8s --channel=latest/edge
     juju deploy traefik-k8s --channel edge --trust
     juju deploy s3-integrator --channel edge
 
-    export AWS_ACCESS_KEY_ID=minio
-    export AWS_SECRET_ACCESS_KEY=supersuperkey
     
     juju config netbox django_allowed_hosts='["*"]'
     juju integrate redis-k8s netbox
@@ -149,40 +143,19 @@ runcmd:
     juju config traefik-k8s routing_mode=path
     juju integrate traefik-k8s netbox
 
-    juju config s3-integrator endpoint="http://${IPADDR}" bucket=netbox path=/ region=us-west-1 s3-uri-style=path
+    juju config s3-integrator endpoint="http://${IPADDR}:9000" bucket=netbox path=/ region=us-west-1 s3-uri-style=path
     juju wait-for application s3-integrator --query='name=="s3-integrator" && (status=="active" || status=="blocked")'
     juju run s3-integrator/leader sync-s3-credentials access-key=${AWS_ACCESS_KEY_ID} secret-key=${AWS_SECRET_ACCESS_KEY}
     juju integrate s3-integrator netbox
 
-    juju wait-for application minio
-    juju config minio secret-key=${AWS_SECRET_ACCESS_KEY}
-
     # No need for S3 working at this point.
     juju wait-for application netbox
 
-    # Make S3 work. Ugly trick for minio to work correctly. The reason is that NetBox replies with urls from the S3 provider,
-    # so it has to be accessible. However there is no integration with Minio ingress.
-    # FIXME. Find a better workaround. nginx-integrator cannot be used as it requires a hostname, and that makes
-    # the process less straightforward.
-    # traefik-k8s creates a LoadBalancer, and creating another one for ingress would require 2 IPs (creating 2 IPs could be explored).
-    # Other alternative could be to not use Minio inside Juju/k8s and run an s3 compatible server in the VM.
-    juju wait-for application minio
-    cp /tmp/traefik_juju_minio.yaml ~/
-    juju scp --container traefik /home/ubuntu/traefik_juju_minio.yaml traefik-k8s/0:/opt/traefik/juju
-
-    # Last thing is to create the bucket.
-    MINIO_URL=http://$(juju status minio/leader -m microk8s:netbox  --format=yaml | yq ".applications.minio.address"):9000
-    export AWS_ENDPOINT=${MINIO_URL}
-    export AWS_ENDPOINT_URL=${AWS_ENDPOINT}
-    export AWS_IGNORE_CONFIGURED_ENDPOINT_URLS=${AWS_IGNORE_CONFIGURED_ENDPOINT_URLS}
-
-    aws configure set profile.default.aws_access_key_id "${AWS_ACCESS_KEY_ID}"
-    aws configure set profile.default.aws_secret_access_key "${AWS_SECRET_ACCESS_KEY}"
-    aws configure set profile.default.region us-west-1
-    aws configure set profile.default.s3.signature_version s3v4
-    
-    aws-cli.aws s3api create-bucket --bucket netbox
-    aws-cli.aws s3api list-buckets
+    # configure MINIO acces-key/secret-key and create bucket
+    docker exec minio mc config host add minio http://127.0.0.1:9000 minioadmin minioadmin
+    docker exec minio mc admin user svcacct add --access-key "${AWS_ACCESS_KEY_ID}" --secret-key "${AWS_SECRET_ACCESS_KEY}" minio minioadmin
+    docker exec minio mc mb minio/netbox
+    docker exec minio mc ls minio
   EOF
 
 

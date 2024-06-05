@@ -52,10 +52,3 @@ And the commands executed with:
 ```
 multipass exec netbox -- tail -f /var/log/cloud-init.log -f
 ```
-
-If for whatever reason the `traefik-k8s/0` pod dies, as Minio does not implement the `ingress` interface,
-Traefik will not route correctly to Minio, and S3 will not work. Until that interface is implemented,
-you will have to run the next command manually in this case:
-```
-multipass exec netbox -- juju scp --container traefik /home/ubuntu/traefik_juju_minio.yaml traefik-k8s/0:/opt/traefik/juju
-```
