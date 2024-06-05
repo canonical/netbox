@@ -31,12 +31,12 @@ multipass launch  -vvvv --cloud-init https://raw.githubusercontent.com/canonical
 ```
 
 Congratulations, at this point your NetBox instance is installed and working. You can get the Netbox URL
-using the URL with the following command:
+with the following command:
 ```
 multipass exec netbox -- juju run traefik-k8s/0 show-proxied-endpoints --format=yaml
 ```
 
-The previous command will output a URL similar to `http://<your VM ip>/netbox-netbox`. Open it with 
+The previous command will output a URL similar to `http://<your VM ip>/netbox-netbox`. Open it with
 with your favourite internet browser. However, you will not be able to do much without a user.
 
 You can create an admin user with the next command:
@@ -44,8 +44,8 @@ You can create an admin user with the next command:
 multipass exec netbox -- juju run netbox/leader create-superuser username=admin email=netbox@example.com
 ```
 
-The output will output a password. You can now login into the NetBox webpage with the user `admin`
-and the previous password. You have now full access to NetBox.
+The output of the previous command will output a password. You can now log in into the NetBox
+webpage with the user `admin` and the previous password. You have now full access to NetBox!.
 
 Once you are finished, you can delete the netbox VM with the next command:
 ```
