@@ -2,39 +2,50 @@
 
 We recommend the [Getting Started Tutorial](./getting-started.md) to get familiarised with NetBox in a Juju deployment.
 
-However, if your goal is to test NetBox locally in the easiest
-possible way (not recommended for a production environment), then this
-is your tutorial.
+This tutorial will allow you to test NetBox locally in the easiest possible way (not recommended for a production environment).
+
+## What you'll do
+
+- Install [Multipass](https://multipass.run)
+- [Launch NetBox with a Multipass VM](#Launch NetBox with a Multipass VM)
+
+## Prerequisites
+
+You need a machine where Multipass can be installed. You will need 4GB of RAM for the VM, so it is recommended that
+your computer has at least 8GB of RAM. Also 20GB of free disk space are needed.
+
+Multipass can be easily installed in Linux, Windows and macOS. You will need a machine with amd64 architecture or an amd64 emulator,
+as the NetBox charm is only built for amd64.
 
 ## Install Multipass
 
-You need to install Multipass. With Multipass you will create a Ubuntu
-VMs with NetBox installed.
+Follow the instruction in [https://multipass.run/install](https://multipass.run/install).
 
+## Launch NetBox with a Multipass VM
 
-Multipass can be easily installed in Linux, Windows and macOS. See
-https://multipass.run/install for more instructions.
-
-## Launch NetBox with a Multipass instance.
-
-
-Launch a VM named `netbox` with Multipass, using the cloud init configuration that will installed NetBox. This
+You will launch a VM named `netbox` with Multipass, using the cloud init configuration that will install NetBox. This
 process will take about 20 minutes, depending on your computer and internet connection. Run the next command
-to install NetBox:
+to provision the VM with NetBox:
 ```
-multipass launch  -vvvv --cloud-init https://raw.githubusercontent.com/canonical/netbox/main/charm/cloudinit-juju-3.1.yaml --timeout 1800 --name netbox --memory 4G --cpus 3 --disk 30G 22.04
+multipass launch  -vvvv --cloud-init https://raw.githubusercontent.com/canonical/netbox/main/charm/cloudinit-juju-3.1.yaml --timeout 1800 --name netbox --memory 4G --cpus 3 --disk 20G 22.04
 ```
 
-After the VM is started and running, you can access Netbox using the URL that you will
-get with the next command:
+Congratulations, at this point your NetBox instance is installed and working. You can get the Netbox URL
+using the URL with the following command:
 ```
 multipass exec netbox -- juju run traefik-k8s/0 show-proxied-endpoints --format=yaml
 ```
+
+The previous command will output a URL similar to `http://<your VM ip>/netbox-netbox`. Open it with 
+with your favourite internet browser. However, you will not be able to do much without a user.
 
 You can create an admin user with the next command:
 ```
 multipass exec netbox -- juju run netbox/leader create-superuser username=admin email=netbox@example.com
 ```
+
+The output will output a password. You can now login into the NetBox webpage with the user `admin`
+and the previous password. You have now full access to NetBox.
 
 Once you are finished, you can delete the netbox VM with the next command:
 ```
