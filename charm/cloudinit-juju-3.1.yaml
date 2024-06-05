@@ -136,7 +136,7 @@ runcmd:
     juju deploy s3-integrator --channel edge
 
     
-    juju config netbox django_allowed_hosts='["*"]'
+    juju config netbox django-allowed-hosts='*'
     juju integrate redis-k8s netbox
     juju integrate postgresql-k8s netbox
 
