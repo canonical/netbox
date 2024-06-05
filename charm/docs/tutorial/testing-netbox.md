@@ -23,9 +23,10 @@ Follow the instruction in [https://multipass.run/install](https://multipass.run/
 
 ## Launch NetBox with a Multipass VM
 
-You will launch a VM named `netbox` with Multipass, using the cloud init configuration that will install NetBox. This
-process will take about 20 minutes, depending on your computer and internet connection. Run the next command
-to provision the VM with NetBox:
+You will launch a VM named `netbox` with Multipass, using the
+[cloud init configuration](https://raw.githubusercontent.com/canonical/netbox/main/charm/cloudinit-juju-3.1.yaml)
+that will install NetBox. This process will take about 20 minutes, depending on your computer and internet connection.
+Run the next command to provision the VM with NetBox:
 ```
 multipass launch  -vvvv --cloud-init https://raw.githubusercontent.com/canonical/netbox/main/charm/cloudinit-juju-3.1.yaml --timeout 1800 --name netbox --memory 4G --cpus 3 --disk 20G 22.04
 ```
