@@ -1,25 +1,33 @@
-# multipass launch --cloud-init charm-dev-juju-3.1.yaml --timeout 1800 --name netbox --memory 4G --cpus 3 --disk 30G -vvvv
-# multipass launch --cloud-init https://raw.githubusercontent.com/canonical/netbox/multipass-info/charm/charm-dev-juju-3.1.yaml --timeout 1800 --name netbox --memory 4G --cpus 3 --disk 30G -vvvv
+
+# Easiest way to deploy NetBox. The only requirement is multipass.
+# To deploy:
+# multipass launch  -vvvv --cloud-init cloudinit-juju-3.1.yaml --timeout 1800 --name netbox --memory 4G --cpus 3 --disk 30G 22.04
+# Or from the cloud init in the repo (main branch):
+# multipass launch  -vvvv --cloud-init https://raw.githubusercontent.com/canonical/netbox/main/charm/cloudinit-juju-3.1.yaml --timeout 1800 --name netbox --memory 4G --cpus 3 --disk 30G 22.04
+
+# After deploying, you can get the url for NetBox, that will work in the host computer with:
 # multipass exec netbox -- juju run traefik-k8s/0 show-proxied-endpoints --format=yaml
+# It will be something like http://<IP of the VM>/netbox-netbox
+
+# And you can create an admin user with:
 # multipass exec netbox -- juju run netbox/leader create-superuser username=admin email=netbox@example.com
+# The response will include the password. You can now login into NetBox with that user.
+
+# When you are finished, you can delete the multipass VM with:
 # multipass delete netbox --purge
 
-# to check the state of the installation (after a few minutes after launching):
+# To debug possible problems, you can inspect the next log files:
 # multipass exec netbox -- tail -f /var/log/cloud-init-output.log -f
-
-
-# not necessary with traefik in path mode:
-# VMIP=$(multipass info --all --format json | jq -r ".info.netbox.ipv4[0]")
-# printf "\n${VMIP} netbox.internal # DELETE WHEN DONE\n" | sudo tee -a /etc/hosts
+# multipass exec netbox -- tail -f /var/log/cloud-init.log -f
 
 
 package_update: true
 
 packages:
-- python3-pip
+# - python3-pip
 - jq
-- sysstat
-- tox
+# - sysstat
+# - tox
 - gnome-keyring
 - sshfs
 
@@ -29,16 +37,15 @@ snap:
   - snap install microk8s --channel 1.29-strict/stable
   - snap alias microk8s.kubectl kubectl
   - snap alias microk8s.kubectl k
-  - snap install --classic charmcraft
-  - snap install --classic snapcraft
+  # - snap install --classic charmcraft
+  # - snap install --classic snapcraft
   - snap install yq
   - snap install aws-cli --classic
   - snap install multipass-sshfs
   - snap refresh
 
 write_files:
-  - path: /home/ubuntu/traefik_juju_minio.yaml
-    owner: ubuntu:ubuntu
+  - path: /tmp/traefik_juju_minio.yaml
     content: |
       http:
         routers:
@@ -55,7 +62,7 @@ write_files:
 
 runcmd:
 - DEBIAN_FRONTEND=noninteractive apt-get remove -y landscape-client landscape-common adwaita-icon-theme humanity-icon-theme
-- DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
+# - DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
 - DEBIAN_FRONTEND=noninteractive apt-get -y autoremove
 
 - |
@@ -89,14 +96,13 @@ runcmd:
   adduser ubuntu lxd
 
 - |
-  # Make sure juju directory is there
-  sudo -u ubuntu mkdir -p /home/ubuntu/.local/share/juju
+  # setup microk8s and bootstrap
+  usermod -a -G snap_microk8s ubuntu
+  # adduser ubuntu microk8s
 
 - |
-  # setup microk8s and bootstrap
-  sudo usermod -a -G snap_microk8s ubuntu
   sudo -u ubuntu mkdir -p /home/ubuntu/.kube
-  adduser ubuntu microk8s
+  sudo -u ubuntu mkdir -p /home/ubuntu/.local/share/juju
   microk8s status --wait-ready
 
   microk8s.enable metrics-server
@@ -105,7 +111,8 @@ runcmd:
   # The dns addon will restart the api server so you may see a blip in the availability
   # Separating addons to avoid errors such as
   # dial tcp 127.0.0.1:16443: connect: connection refused
-  microk8s.enable dns rbac
+  microk8s.enable rbac
+  microk8s.enable dns
   microk8s.kubectl rollout status deployments/coredns -n kube-system -w --timeout=600s
 
   microk8s.enable hostpath-storage
@@ -114,7 +121,7 @@ runcmd:
 
   sudo -u ubuntu juju bootstrap microk8s microk8s
 
-  # dump config (this is needed for utils such as k9s or kdash)
+  # dump microk8s config
   microk8s config | sudo -u ubuntu tee /home/ubuntu/.kube/config > /dev/null
 
 - |
@@ -127,6 +134,9 @@ runcmd:
     juju switch microk8s
     juju add-model netbox
     juju switch netbox
+
+    # TODO Deploy everything together to try to speed the process
+    
     juju deploy minio --channel edge
     sleep 5
     juju config minio secret-key=supersuperkey
@@ -146,20 +156,22 @@ runcmd:
     juju config traefik-k8s routing_mode=path
     juju integrate traefik-k8s netbox
 
-
     juju deploy s3-integrator --channel edge
     juju config s3-integrator endpoint="http://${IPADDR}" bucket=netbox path=/ region=us-west-1 s3-uri-style=path
     juju wait-for application s3-integrator --query='name=="s3-integrator" && (status=="active" || status=="blocked")'
     juju run s3-integrator/leader sync-s3-credentials access-key=${AWS_ACCESS_KEY_ID} secret-key=${AWS_SECRET_ACCESS_KEY}
     juju integrate s3-integrator netbox
 
+    # No need for S3 working at this point.
     juju wait-for application netbox
 
-    # Ugly trick for minio to work correctly.
+    # Make S3 work. Ugly trick for minio to work correctly. The reason is that NetBox replies with urls from the S3 provider,
+    # so it has to be accessible. However there is not integration with minio for that.
+    juju wait-for application minio
+    cp /tmp/traefik_juju_minio.yaml ~/
     juju scp --container traefik /home/ubuntu/traefik_juju_minio.yaml traefik-k8s/0:/opt/traefik/juju
 
-    # Last thing is to create the bucket, to give minio time to settle up...
-    juju wait-for application minio
+    # Last thing is to create the bucket.
     MINIO_URL=http://$(juju status minio/leader -m microk8s:netbox  --format=yaml | yq ".applications.minio.address"):9000
     export AWS_ENDPOINT=${MINIO_URL}
     export AWS_ENDPOINT_URL=${AWS_ENDPOINT}
@@ -172,9 +184,6 @@ runcmd:
     
     aws-cli.aws s3api create-bucket --bucket netbox
     aws-cli.aws s3api list-buckets
-    # TODO MINIO DOES NOT REALLY WORK, AS IT REDIRECTS THE USER TO A URL LIKE:
-    # http://minio-0.minio-endpoints:9000/netbox/image-attachment/site_1_s3.png?AWSAccessKeyId=minio&Signature=AXa9UzIn2jBjg03qnHylD6MMS54%3D&Expires=
-    # WE SHOULD CREATE AN INGRESS FOR IT...
   EOF
 
 
