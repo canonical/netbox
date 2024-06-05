@@ -22,7 +22,7 @@ Launch a VM named `netbox` with Multipass, using the cloud init configuration th
 process will take about 20 minutes, depending on your computer and internet connection. Run the next command
 to install NetBox:
 ```
-multipass launch --cloud-init https://raw.githubusercontent.com/canonical/netbox/main/charm/cloudinit-juju-3.1.yaml --timeout 1800 --name netbox --memory 4G --cpus 3 --disk 30G 22.04
+multipass launch  -vvvv --cloud-init https://raw.githubusercontent.com/canonical/netbox/main/charm/cloudinit-juju-3.1.yaml --timeout 1800 --name netbox --memory 4G --cpus 3 --disk 30G 22.04
 ```
 
 After the VM is started and running, you can access Netbox using the URL that you will
@@ -42,6 +42,13 @@ multipass delete netbox --purge
 ```
 
 ## Troubleshooting
+
+You can see the output log in:
 ```
 multipass exec netbox -- tail -f /var/log/cloud-init-output.log
+```
+
+And the commands executed with:
+```
+multipass exec netbox -- tail -f /var/log/cloud-init.log -f
 ```

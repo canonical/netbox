@@ -1,5 +1,5 @@
-
 # Easiest way to deploy NetBox. The only requirement is multipass.
+
 # To deploy:
 # multipass launch  -vvvv --cloud-init cloudinit-juju-3.1.yaml --timeout 1800 --name netbox --memory 4G --cpus 3 --disk 30G 22.04
 # Or from the cloud init in the repo (main branch):
@@ -20,14 +20,10 @@
 # multipass exec netbox -- tail -f /var/log/cloud-init-output.log -f
 # multipass exec netbox -- tail -f /var/log/cloud-init.log -f
 
-
 package_update: true
 
 packages:
-# - python3-pip
 - jq
-# - sysstat
-# - tox
 - gnome-keyring
 - sshfs
 
@@ -37,12 +33,9 @@ snap:
   - snap install microk8s --channel 1.29-strict/stable
   - snap alias microk8s.kubectl kubectl
   - snap alias microk8s.kubectl k
-  # - snap install --classic charmcraft
-  # - snap install --classic snapcraft
   - snap install yq
   - snap install aws-cli --classic
   - snap install multipass-sshfs
-  - snap refresh
 
 write_files:
   - path: /tmp/traefik_juju_minio.yaml
@@ -61,9 +54,6 @@ write_files:
               - url: http://minio-0.minio-endpoints:9000
 
 runcmd:
-- DEBIAN_FRONTEND=noninteractive apt-get remove -y landscape-client landscape-common adwaita-icon-theme humanity-icon-theme
-# - DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
-- DEBIAN_FRONTEND=noninteractive apt-get -y autoremove
 
 - |
   # disable swap
@@ -98,7 +88,6 @@ runcmd:
 - |
   # setup microk8s and bootstrap
   usermod -a -G snap_microk8s ubuntu
-  # adduser ubuntu microk8s
 
 - |
   sudo -u ubuntu mkdir -p /home/ubuntu/.kube
@@ -129,38 +118,41 @@ runcmd:
   echo Install NetBox 
   sudo -u ubuntu bash <<'EOF'
     set -x
+
+    IPADDR=$(ip -4 -j route get 2.2.2.2 | jq -r '.[] | .prefsrc')
+    sudo microk8s enable metallb:$IPADDR-$IPADDR
+    
     NETBOX_HOSTNAME=netbox.internal
 
     juju switch microk8s
     juju add-model netbox
     juju switch netbox
 
-    # TODO Deploy everything together to try to speed the process
-    
+    # Deploy everything together to try to speed up the process
+    juju deploy postgresql-k8s --channel 14/stable --trust
     juju deploy minio --channel edge
-    sleep 5
-    juju config minio secret-key=supersuperkey
+    juju deploy netbox --channel latest/edge
+    juju deploy redis-k8s --channel=latest/edge
+    juju deploy traefik-k8s --channel edge --trust
+    juju deploy s3-integrator --channel edge
+
     export AWS_ACCESS_KEY_ID=minio
     export AWS_SECRET_ACCESS_KEY=supersuperkey
     
-    juju deploy netbox --channel latest/edge
     juju config netbox django_allowed_hosts='["*"]'
-    juju deploy redis-k8s --channel=latest/edge
     juju integrate redis-k8s netbox
-    juju deploy postgresql-k8s --channel 14/stable --trust
     juju integrate postgresql-k8s netbox
 
-    IPADDR=$(ip -4 -j route get 2.2.2.2 | jq -r '.[] | .prefsrc')
-    sudo microk8s enable metallb:$IPADDR-$IPADDR
-    juju deploy traefik-k8s --channel edge --trust
     juju config traefik-k8s routing_mode=path
     juju integrate traefik-k8s netbox
 
-    juju deploy s3-integrator --channel edge
     juju config s3-integrator endpoint="http://${IPADDR}" bucket=netbox path=/ region=us-west-1 s3-uri-style=path
     juju wait-for application s3-integrator --query='name=="s3-integrator" && (status=="active" || status=="blocked")'
     juju run s3-integrator/leader sync-s3-credentials access-key=${AWS_ACCESS_KEY_ID} secret-key=${AWS_SECRET_ACCESS_KEY}
     juju integrate s3-integrator netbox
+
+    juju wait-for application minio
+    juju config minio secret-key=${AWS_SECRET_ACCESS_KEY}
 
     # No need for S3 working at this point.
     juju wait-for application netbox
