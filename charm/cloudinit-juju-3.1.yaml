@@ -158,7 +158,10 @@ runcmd:
     juju wait-for application netbox
 
     # Make S3 work. Ugly trick for minio to work correctly. The reason is that NetBox replies with urls from the S3 provider,
-    # so it has to be accessible. However there is not integration with minio for that.
+    # so it has to be accessible. However there is no integration with Minio ingress.
+    # FIXME. Find a better workaround. nginx-integrator cannot be used as it requires a hostname, and that makes
+    # the process less straightforward.
+    # traefik-k8s creates a LoadBalancer, and creating another one for ingress would require 2 IPs (creating 2 IPs could be explored).
     juju wait-for application minio
     cp /tmp/traefik_juju_minio.yaml ~/
     juju scp --container traefik /home/ubuntu/traefik_juju_minio.yaml traefik-k8s/0:/opt/traefik/juju
