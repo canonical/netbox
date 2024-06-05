@@ -18,150 +18,42 @@ platforms:
 # should have an `wsgi.py` file with an `application` object as the WSGI entrypoint.
 extensions:
     - django-framework
-
 parts:
-    # NetBox project does not suit the paas-app-charmer project yet.
-    # Until paas-app-charmer project supports the NetBox
-    # directory organisation, this changes are needed.
-    django-framework/install-app:
-        prime:
-            - "django/app/account"
-            - "django/app/circuits"
-            - "django/app/core"
-            - "django/app/dcim"
-            - "django/app/extras"
-            - "django/app/generate_secret_key.py"
-            - "django/app/ipam"
-            - "django/app/manage.py"
-            - "django/app/media"
-            - "django/app/netbox"
-            - "django/app/project-static"
-            - "django/app/reports"
-            - "django/app/scripts"
-            - "django/app/static"
-            - "django/app/templates"
-            - "django/app/tenancy"
-            - "django/app/translations"
-            - "django/app/users"
-            - "django/app/utilities"
-            - "django/app/virtualization"
-            - "django/app/vpn"
-            - "django/app/wireless"
-        stage:
-            - "django/app/account"
-            - "django/app/circuits"
-            - "django/app/core"
-            - "django/app/dcim"
-            - "django/app/extras"
-            - "django/app/generate_secret_key.py"
-            - "django/app/ipam"
-            - "django/app/manage.py"
-            - "django/app/media"
-            - "django/app/netbox"
-            - "django/app/project-static"
-            - "django/app/reports"
-            - "django/app/scripts"
-            - "django/app/static"
-            - "django/app/templates"
-            - "django/app/tenancy"
-            - "django/app/translations"
-            - "django/app/users"
-            - "django/app/utilities"
-            - "django/app/virtualization"
-            - "django/app/vpn"
-            - "django/app/wireless"
-        organize:
-            account: "django/app/account"
-            circuits: "django/app/circuits"
-            core: "django/app/core"
-            dcim: "django/app/dcim"
-            extras: "django/app/extras"
-            generate_secret_key.py: "django/app/generate_secret_key.py"
-            ipam: "django/app/ipam"
-            manage.py: "django/app/manage.py"
-            media: "django/app/media"
-            netbox: "django/app/netbox"
-            project-static: "django/app/project-static"
-            reports: "django/app/reports"
-            scripts: "django/app/scripts"
-            static: "django/app/static"
-            templates: "django/app/templates"
-            tenancy: "django/app/tenancy"
-            translations: "django/app/translations"
-            users: "django/app/users"
-            utilities: "django/app/utilities"
-            virtualization: "django/app/virtualization"
-            vpn: "django/app/vpn"
-            wireless: "django/app/wireless"
-        override-pull: |-
-            craftctl default
-            # We need to overwrite the settings and set the configuration.
-            # We could use a different DJANGO_SETTINGS_MODULE env var, but has to be
-            # used everywhere in that case.
-            [ ! -d netbox.orig ] && mv netbox netbox.orig && cp -R netbox.orig/* .
-            cp charm/netbox_configuration.py ./netbox/configuration.py
-            [ ! -f netbox/original_settings.py ] && mv netbox/settings.py netbox/original_settings.py
-            cp charm/netbox_settings.py ./netbox/settings.py
-        after:
-            - django-framework/dependencies
-        override-build: |-
-            # At this point, the original configuration does not work correctly.
-            # Some missing env vars like DJANGO_SECRET_KEY...
-            NETBOX_CONFIGURATION=netbox.configuration_testing PYTHONUSERBASE=${CRAFT_STAGE} python3 manage.py collectstatic --no-input
-            craftctl default
-        override-prime: |-
-            craftctl default
-            # Until paas-app-charmer provides a direct migrate for Django
-            echo -e '#!/bin/bash\nexec python3 manage.py migrate'  > "${CRAFT_PRIME}/django/app/migrate.sh"
-        permissions:
-          - path: django/app/reports
-            owner: 584792
-            group: 584792
-          - path: django/app/scripts
-            owner: 584792
-            group: 584792
-
     django-framework/dependencies:
         overlay-packages:
             - ca-certificates
-        # pyproject.toml breaks the build. Remove it.
-        override-build: |-
-            rm -f pyproject.toml
-            craftctl default
         build-packages:
             - pkg-config
             - libxmlsec1-dev
-        python-packages:
-            - django-storages[s3]
-            # needed to serve static assets.
-            - whitenoise
-            # Needed for SAML
-            - python3-saml
-            - lxml
-            # saml library crashes (SEGFAULT) with lxml installed from binary.
-            # https://github.com/SAML-Toolkits/python3-saml/issues/389
-            # Using this trick to not install it from binary and compile it instead.
-            - "--no-binary=lxml"
-            # For remote data sources
-            - boto3
-            - dulwich
         stage-packages:
             # needed for saml
             - libxmlsec1
             - libxmlsec1-openssl
-            # As create super action uses python instead of python3
-            - python-is-python3
-
+        override-build: |-
+            rm -f pyproject.toml
+            craftctl default
+        python-requirements:
+          - requirements.txt
+          - requirements-charm.txt
     cron:
       stage-packages:
         - cron
       plugin: nil
 
+    netbox-post-process:
+        after:
+            - django-framework/dependencies
+            - django-framework/install-app
+        plugin: nil
+        override-prime: |-
+            # At this point, the original configuration does not work correctly.
+            # Some missing env vars like DJANGO_SECRET_KEY...
+            NETBOX_CONFIGURATION=netbox.configuration_testing PYTHONUSERBASE=${CRAFT_PRIME} python3 ${CRAFT_PRIME}/django/app/manage.py collectstatic --no-input
+            # Reports and scripts are written by the _daemon_ user.
+            chown 584792:584792 django/app/reports
+            chown 584792:584792 django/app/scripts
+
 services:
-  django:
-    override: merge
-    # Update from netbox.netbox.wsgi to netbox.wsgi
-    command: /bin/python3 -m gunicorn -c /django/gunicorn.conf.py netbox.wsgi:application
   cron:
     override: merge
     summary: "Cron Service"

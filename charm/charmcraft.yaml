@@ -34,15 +34,6 @@ links:
 extensions:
   - django-framework
 
-actions:
-  # With the next charmcraft create-superuser action should not be here
-  create-superuser:
-    description: Create a super user
-    username:
-      type: string
-    email:
-      type: string
-
 requires:
   postgresql:
     interface: postgresql_client
@@ -60,32 +51,24 @@ requires:
 
 config:
   options:
-    saml_sp_entity_id:
+    saml-sp-entity-id:
       description: |-
         SAML SP entity id.
       type: string
-    saml_username:
+    saml-username:
       description: |-
         SAML attribute used for both the social uid and the username.
         NameID can be used setting this config to 'name.
       type: string
       default: 'name'
-    saml_email:
+    saml-email:
       description: |-
         SAML attribute used for the email.
       type: string
-    aws_endpoint_url:
+    aws-endpoint-url:
       description: |-
         Environment variable for AWS_ENDPOINT_URL.
         This variable has to be set to the S3 compatible server that will host
         data sources if they are not hosted in Amazon S3.
         See https://github.com/netbox-community/netbox/issues/15427
       type: string
-
-parts:
-  charm:
-    override-build: |-
-      rustup default stable
-      craftctl default
-    build-snaps:
-      - rustup
