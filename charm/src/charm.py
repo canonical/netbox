@@ -125,7 +125,7 @@ class DjangoCharm(paas_app_charmer.django.Charm):
         if self._ingress.url:
             env["DJANGO_BASE_URL"] = self._ingress.url
             # This may be problematic, as it could return http instead of https.
-            # In that case, the config option saml_sp_entity_id should be set.
+            # In that case, the config option saml-sp-entity-id should be set.
             if "DJANGO_SAML_SP_ENTITY_ID" not in env:
                 parsed_ingress_url = urllib.parse.urlparse(self._ingress.url)
                 parsed_ingress_url = parsed_ingress_url._replace(path="")
