@@ -291,7 +291,7 @@ async def netbox_nginx_integration_fixture(
         "self-signed-certificates", channel="latest/edge", trust=True
     )
     await model.relate(f"{nginx_app.name}", f"{self_signed_cerfiticates.name}")
-    await model.wait_for_idle()
+    await model.wait_for_idle(idle_period=30)
     yield relation
     await netbox_app.destroy_relation("ingress", f"{nginx_app.name}:ingress")
     await model.remove_application(self_signed_cerfiticates.name)
