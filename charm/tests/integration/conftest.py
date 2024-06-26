@@ -313,6 +313,7 @@ async def netbox_saml_integration_fixture(
     netbox_app: Application,
     netbox_hostname: str,
     saml_helper: SamlK8sTestHelper,
+    ops_test: OpsTest,
 ):
     """Integrate Netbox and SAML for saml integration."""
     await netbox_app.set_config(
@@ -354,7 +355,7 @@ async def netbox_saml_integration_fixture(
     </md:EntityDescriptor>
     """
     saml_helper.register_service_provider(name=netbox_hostname, metadata=metadata_xml)
-    with async with ops_test.fast_forward():
+    async with ops_test.fast_forward():
         await model.wait_for_idle(idle_period=30)
     yield relation
     await netbox_app.destroy_relation("saml", f"{saml_app.name}:saml")
