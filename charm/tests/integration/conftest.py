@@ -354,6 +354,7 @@ async def netbox_saml_integration_fixture(
     </md:EntityDescriptor>
     """
     saml_helper.register_service_provider(name=netbox_hostname, metadata=metadata_xml)
+    await model.wait_for_idle()
     yield relation
     await netbox_app.destroy_relation("saml", f"{saml_app.name}:saml")
 

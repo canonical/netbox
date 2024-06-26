@@ -17,4 +17,3 @@ jobs:
       charmcraft-repository: jdkandersson/charmcraft
       charmcraft-ref: feature/12f
       charm-directory: "charm"
-      tmate-debug: true
