@@ -291,7 +291,7 @@ async def netbox_nginx_integration_fixture(
         "self-signed-certificates", channel="latest/edge", trust=True
     )
     await model.relate(f"{nginx_app.name}", f"{self_signed_cerfiticates.name}")
-    await model.wait_for_idle(idle_period=30)
+    await model.wait_for_idle()
     yield relation
     await netbox_app.destroy_relation("ingress", f"{nginx_app.name}:ingress")
     await model.remove_application(self_signed_cerfiticates.name)
@@ -354,7 +354,7 @@ async def netbox_saml_integration_fixture(
     </md:EntityDescriptor>
     """
     saml_helper.register_service_provider(name=netbox_hostname, metadata=metadata_xml)
-    await model.wait_for_idle()
+    await model.wait_for_idle(idle_period=30)
     yield relation
     await netbox_app.destroy_relation("saml", f"{saml_app.name}:saml")
 
