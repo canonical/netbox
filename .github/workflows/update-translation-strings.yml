@@ -1,8 +1,6 @@
 name: Update translation strings
 
 on:
-  schedule:
-    - cron: '0 5 * * *'
   workflow_dispatch:
 
 permissions:
