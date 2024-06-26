@@ -273,7 +273,7 @@ async def redis_app_fixture(
     return app
 
 
-@pytest_asyncio.fixture(scope="function", name="netbox_nginx_integration")
+@pytest_asyncio.fixture(scope="module", name="netbox_nginx_integration")
 async def netbox_nginx_integration_fixture(
     model: Model,
     nginx_app: Application,
@@ -306,7 +306,7 @@ async def saml_helper_fixture(
     return saml_helper
 
 
-@pytest_asyncio.fixture(scope="function", name="netbox_saml_integration")
+@pytest_asyncio.fixture(scope="module", name="netbox_saml_integration")
 async def netbox_saml_integration_fixture(
     model: Model,
     saml_app: Application,
