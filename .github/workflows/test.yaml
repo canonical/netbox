@@ -10,3 +10,4 @@ jobs:
     with:
       charm-directory: "charm"
       shellcheck-working-directory: "./charm"
+      pre-run-script: ./charm/install_netbox_dependencies.sh
