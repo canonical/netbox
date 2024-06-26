@@ -96,7 +96,7 @@ async def test_netbox_storage(
     )
     files = {"image": ("image.png", smallpngimage)}
     payload = {
-        "content_type": "dcim.site",
+        "object_type": "dcim.site",
         "object_id": site_id,
         "name": "image name",
         "image_height": 1,

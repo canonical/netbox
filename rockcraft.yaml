@@ -25,10 +25,13 @@ parts:
         build-packages:
             - pkg-config
             - libxmlsec1-dev
+            - libpq-dev
         stage-packages:
             # needed for saml
             - libxmlsec1
             - libxmlsec1-openssl
+            # needed for postgresql (psycopg)
+            - libpq5
         override-build: |-
             rm -f pyproject.toml
             craftctl default
