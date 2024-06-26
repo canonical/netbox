@@ -215,7 +215,8 @@ async def test_saml_netbox(
     assert res.status_code == 200
     assert "<title>Home | NetBox</title>" in res.text
     # The user is not logged in.
-    assert '<span id="navbar_user">ubuntu</span>' not in res.text
+    assert 'Log Out' not in res.text
+    assert 'ubuntu' not in res.text
 
     session = requests.session()
 
@@ -241,4 +242,5 @@ async def test_saml_netbox(
     assert logged_in_page.status_code == 200
     assert "<title>Home | NetBox</title>" in logged_in_page.text
     # The user is logged in.
-    assert '<span id="navbar_user">ubuntu</span>' in logged_in_page.text
+    assert 'Log Out' in logged_in_page.text
+    assert 'ubuntu' in logged_in_page.text
