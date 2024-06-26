@@ -207,6 +207,7 @@ async def test_saml_netbox(
     act: Log in with saml in NetBox.
     assert: Check that the user ubuntu is logged in.
     """
+    await model.wait_for_idle(idle_period=120)
     res = requests.get(
         "https://127.0.0.1/",
         headers={"Host": netbox_hostname},
