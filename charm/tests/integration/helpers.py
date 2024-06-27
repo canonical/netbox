@@ -76,3 +76,16 @@ async def get_new_admin_token(netbox_app: Application, netbox_base_url: str):
     token = res.json()["key"]
     logger.info("Admin Token: %s", token)
     return token
+
+
+async def get_unit_ips(application: Application) -> list[str]:
+    """Get ip addresses of all units of an application.
+
+    Args:
+        application: Application instance.
+
+    Returns:
+        all the unit ips
+    """
+    status = await application.model.get_status()
+    return [unit.address for unit in status.applications[application.name].units.values()]

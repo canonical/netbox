@@ -5,28 +5,29 @@
 import logging
 import secrets
 import string
-from typing import Callable, Coroutine, List
 
 import pytest
 import requests
-from juju.model import Model
+from juju.application import Application
 from saml_test_helper import SamlK8sTestHelper
 
-from tests.integration.helpers import assert_return_true_with_retry, get_new_admin_token
+from tests.integration.helpers import (
+    assert_return_true_with_retry,
+    get_new_admin_token,
+    get_unit_ips,
+)
 
 logger = logging.getLogger(__name__)
 
 
 @pytest.mark.usefixtures("netbox_app")
-async def test_netbox_health(
-    netbox_app_name: str, get_unit_ips: Callable[[str], Coroutine[None, None, List[str]]]
-) -> None:
+async def test_netbox_health(netbox_app: Application) -> None:
     """
     arrange: Build and deploy the NetBox charm.
     act: Do a get request to the main page and to an asset.
     assert: Both return 200 and the page contains the correct title.
     """
-    unit_ips = await get_unit_ips(netbox_app_name)
+    unit_ips = await get_unit_ips(netbox_app)
     for unit_ip in unit_ips:
 
         url = f"http://{unit_ip}:8000"
@@ -49,9 +50,7 @@ async def test_netbox_health(
 @pytest.mark.usefixtures("netbox_app")
 @pytest.mark.usefixtures("s3_netbox_bucket")
 async def test_netbox_storage(
-    model: Model,
-    netbox_app_name: str,
-    get_unit_ips: Callable[[str], Coroutine[None, None, List[str]]],
+    netbox_app: Application,
     s3_netbox_configuration: dict,
     boto_s3_client,
 ) -> None:
@@ -61,8 +60,7 @@ async def test_netbox_storage(
     assert: The site is created and there is an extra object (the image)
         in S3.
     """
-    netbox_app = model.applications[netbox_app_name]
-    unit_ip = (await get_unit_ips(netbox_app_name))[0]
+    unit_ip = await get_unit_ips(netbox_app)
     base_url = f"http://{unit_ip}:8000"
     token = await get_new_admin_token(netbox_app, base_url)
 
@@ -114,15 +112,13 @@ async def test_netbox_storage(
 
 
 @pytest.mark.usefixtures("netbox_app")
-async def test_netbox_rq_worker_running(
-    netbox_app_name: str, get_unit_ips: Callable[[str], Coroutine[None, None, List[str]]]
-) -> None:
+async def test_netbox_rq_worker_running(netbox_app: Application) -> None:
     """
     arrange: Build and deploy the NetBox charm.
     act: Do a get request to the status api.
     assert: Check that there is one rq worker running.
     """
-    unit_ips = await get_unit_ips(netbox_app_name)
+    unit_ips = await get_unit_ips(netbox_app)
     for unit_ip in unit_ips:
         url = f"http://{unit_ip}:8000/api/status/"
         res = requests.get(
@@ -136,9 +132,7 @@ async def test_netbox_rq_worker_running(
 @pytest.mark.usefixtures("s3_netbox_bucket")
 @pytest.mark.usefixtures("netbox_app")
 async def test_netbox_check_cronjobs(
-    netbox_app_name: str,
-    model: Model,
-    get_unit_ips: Callable[[str], Coroutine[None, None, List[str]]],
+    netbox_app: Application,
     s3_netbox_credentials: dict,
     s3_netbox_configuration: dict,
 ) -> None:
@@ -148,8 +142,7 @@ async def test_netbox_check_cronjobs(
     assert: The cron task syncdatasource should update the status of the datasource
         to completed.
     """
-    netbox_app = model.applications[netbox_app_name]
-    unit_ip = (await get_unit_ips(netbox_app_name))[0]
+    unit_ip = await get_unit_ips(netbox_app)
     base_url = f"http://{unit_ip}:8000"
     token = await get_new_admin_token(netbox_app, base_url)
     headers = {
