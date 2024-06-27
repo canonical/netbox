@@ -313,7 +313,6 @@ async def netbox_saml_integration_fixture(
     netbox_app: Application,
     netbox_hostname: str,
     saml_helper: SamlK8sTestHelper,
-    ops_test: OpsTest,
 ):
     """Integrate Netbox and SAML for saml integration."""
     await netbox_app.set_config(
