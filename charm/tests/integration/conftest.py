@@ -3,12 +3,10 @@
 
 """Fixtures for the NetBox charm integration tests."""
 
-import json
 import logging
 import os.path
 import typing
 from secrets import token_hex
-from typing import Callable, Coroutine, List
 
 import boto3
 import pytest
@@ -34,32 +32,6 @@ async def model_fixture(ops_test: OpsTest) -> Model:
     """Return the current testing juju model."""
     assert ops_test.model
     return ops_test.model
-
-
-@pytest_asyncio.fixture(scope="module", name="get_unit_ips")
-async def get_unit_ips_fixture(
-    ops_test: OpsTest,
-) -> Callable[[str], Coroutine[None, None, List[str]]]:
-    """Return an async function to retrieve unit ip addresses of a certain application."""
-
-    async def get_unit_ips(application_name: str):
-        """Retrieve unit ip addresses of a certain application.
-
-        Args:
-            application_name: application name.
-
-        Returns:
-            a list containing unit ip addresses.
-        """
-        _, status, _ = await ops_test.juju("status", "--format", "json")
-        status = json.loads(status)
-        units = status["applications"][application_name]["units"]
-        return tuple(
-            unit_status["address"]
-            for _, unit_status in sorted(units.items(), key=lambda kv: int(kv[0].split("/")[-1]))
-        )
-
-    return get_unit_ips
 
 
 @pytest.fixture(scope="module", name="saml_app_name")
@@ -226,7 +198,6 @@ async def netbox_app_fixture(
     netbox_app_image: str,
     netbox_app_name: str,
     postgresql_app_name: str,
-    get_unit_ips,
     redis_app_name: str,
     redis_app: Application,
     postgresql_app: Application,
@@ -273,7 +244,7 @@ async def redis_app_fixture(
     return app
 
 
-@pytest_asyncio.fixture(scope="function", name="netbox_nginx_integration")
+@pytest_asyncio.fixture(scope="module", name="netbox_nginx_integration")
 async def netbox_nginx_integration_fixture(
     model: Model,
     nginx_app: Application,
@@ -306,7 +277,7 @@ async def saml_helper_fixture(
     return saml_helper
 
 
-@pytest_asyncio.fixture(scope="function", name="netbox_saml_integration")
+@pytest_asyncio.fixture(scope="module", name="netbox_saml_integration")
 async def netbox_saml_integration_fixture(
     model: Model,
     saml_app: Application,
