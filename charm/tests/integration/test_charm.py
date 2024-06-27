@@ -60,7 +60,7 @@ async def test_netbox_storage(
     assert: The site is created and there is an extra object (the image)
         in S3.
     """
-    unit_ip = await get_unit_ips(netbox_app)
+    unit_ip = await get_unit_ips(netbox_app)[0]
     base_url = f"http://{unit_ip}:8000"
     token = await get_new_admin_token(netbox_app, base_url)
 
@@ -142,7 +142,7 @@ async def test_netbox_check_cronjobs(
     assert: The cron task syncdatasource should update the status of the datasource
         to completed.
     """
-    unit_ip = await get_unit_ips(netbox_app)
+    unit_ip = await get_unit_ips(netbox_app)[0]
     base_url = f"http://{unit_ip}:8000"
     token = await get_new_admin_token(netbox_app, base_url)
     headers = {
