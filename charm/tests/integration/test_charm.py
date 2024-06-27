@@ -199,7 +199,6 @@ async def test_netbox_check_cronjobs(
 async def test_saml_netbox(
     saml_helper: SamlK8sTestHelper,
     netbox_hostname: str,
-    model: Model,
 ) -> None:
     """
     arrange: Deploy NetBox with nginx and saml. Check that the
