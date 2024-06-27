@@ -138,7 +138,7 @@ CSRF_COOKIE_NAME = 'csrftoken'
 # Set to True to enable server debugging. WARNING: Debugging introduces a substantial performance penalty and may reveal
 # sensitive information about your installation. Only enable debugging while performing testing. Never enable debugging
 # on a production system.
-DEBUG = os.environ.get("DJANGO_DEBUG", False)
+DEBUG = os.environ.get("DJANGO_DEBUG", "false") == "true"
 
 # Set the default preferred language/locale
 DEFAULT_LANGUAGE = 'en-us'
