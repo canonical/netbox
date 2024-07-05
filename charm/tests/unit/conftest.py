@@ -53,7 +53,7 @@ requires:
     interface: saml
     limit: 1
     optional: true
-  storage:
+  s3:
     interface: s3
     limit: 1
 resources:

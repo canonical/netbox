@@ -292,8 +292,8 @@ if "SAML_ENTITY_ID" in os.environ:
     SOCIAL_AUTH_SAML_ENABLED_IDPS = {
         "saml": {
             "entity_id": os.environ.get("SAML_ENTITY_ID"),
-            "url": os.environ.get("SAML_SINGLE_SIGN_ON_SERVICE_REDIRECT_URL"),
-            "x509cert": os.environ.get("SAML_X509CERTS"),
+            "url": os.environ.get("SAML_SINGLE_SIGN_ON_REDIRECT_URL"),
+            "x509cert": os.environ.get("SAML_SIGNING_CERTIFICATE"),
             "attr_user_permanent_id": os.environ.get("DJANGO_SAML_USERNAME"),
             "attr_username": os.environ.get("DJANGO_SAML_USERNAME"),
         }
@@ -331,13 +331,13 @@ REMOTE_AUTH_DEFAULT_PERMISSIONS = {}
 # By default, uploaded media is stored on the local filesystem. Using Django-storages is also supported. Provide the
 # class path of the storage driver in STORAGE_BACKEND and any configuration options in STORAGE_CONFIG.
 # For the NetBox charm, the only supported option is S3 storage.
-if 'DJANGO_STORAGE_AWS_ACCESS_KEY_ID' in os.environ:
+if 'S3_ACCESS_KEY' in os.environ:
     STORAGE_BACKEND = 'storages.backends.s3boto3.S3Boto3Storage'
     STORAGE_CONFIG = {
-        'AWS_ACCESS_KEY_ID': os.environ.get('DJANGO_STORAGE_AWS_ACCESS_KEY_ID'),
-        'AWS_SECRET_ACCESS_KEY': os.environ.get('DJANGO_STORAGE_AWS_SECRET_ACCESS_KEY'),
-        'AWS_STORAGE_BUCKET_NAME': os.environ.get('DJANGO_STORAGE_AWS_STORAGE_BUCKET_NAME'),
-        'AWS_S3_REGION_NAME': os.environ.get('DJANGO_STORAGE_AWS_S3_REGION_NAME'),
-        'AWS_S3_ENDPOINT_URL': os.environ.get('DJANGO_STORAGE_AWS_S3_ENDPOINT_URL'),
-        'AWS_S3_ADDRESSING_STYLE': os.environ.get('DJANGO_STORAGE_AWS_S3_ADDRESSING_STYLE'),
+        'AWS_ACCESS_KEY_ID': os.environ.get('S3_ACCESS_KEY'),
+        'AWS_SECRET_ACCESS_KEY': os.environ.get('S3_SECRET_KEY'),
+        'AWS_STORAGE_BUCKET_NAME': os.environ.get('S3_BUCKET'),
+        'AWS_S3_REGION_NAME': os.environ.get('S3_REGION'),
+        'AWS_S3_ENDPOINT_URL': os.environ.get('S3_ENDPOINT'),
+        'AWS_S3_ADDRESSING_STYLE': os.environ.get('S3_ADDRESSING_STYLE'),
     }

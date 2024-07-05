@@ -38,7 +38,7 @@ requires:
   postgresql:
     interface: postgresql_client
     limit: 1
-  storage:
+  s3:
     interface: s3
     limit: 1
   redis:
