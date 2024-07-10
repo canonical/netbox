@@ -216,7 +216,6 @@ async def netbox_app_fixture(
         config={
             "django-debug": False,
             "django-allowed-hosts": "*",
-            "aws-endpoint-url": s3_netbox_configuration["endpoint"],
         },
     )
     # If update_status comes before pebble ready, the unit gets to

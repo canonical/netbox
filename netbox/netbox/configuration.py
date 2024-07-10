@@ -21,16 +21,13 @@ ALLOWED_HOSTS = json.loads(os.environ.get("DJANGO_ALLOWED_HOSTS", "[]"))
 # PostgreSQL database configuration. See the Django documentation for a complete list of available parameters:
 #   https://docs.djangoproject.com/en/stable/ref/settings/#databases
 
-db_url = os.environ.get("POSTGRESQL_DB_CONNECT_STRING", "")
-parsed_db_url = urllib.parse.urlparse(db_url)
-
 DATABASE = {
     'ENGINE': 'django.db.backends.postgresql',  # Database engine
-    "NAME": parsed_db_url.path.removeprefix("/"),
-    "USER": parsed_db_url.username,
-    "PASSWORD": parsed_db_url.password,
-    "HOST": parsed_db_url.hostname,
-    "PORT": parsed_db_url.port or "5432",
+    "NAME": os.environ.get("POSTGRESQL_DB_NAME"),
+    "USER": os.environ.get("POSTGRESQL_DB_USERNAME"),
+    "PASSWORD": os.environ.get("POSTGRESQL_DB_PASSWORD"),
+    "HOST": os.environ.get("POSTGRESQL_DB_HOSTNAME"),
+    "PORT": int(os.environ.get("POSTGRESQL_DB_PORT", "5432")),
     'CONN_MAX_AGE': 300,      # Max database connection age
 }
 
@@ -38,23 +35,15 @@ DATABASE = {
 # configuration exists for each. Full connection details are required in both sections, and it is strongly recommended
 # to use two separate database IDs.
 
-redis_url = os.environ.get("REDIS_DB_CONNECT_STRING", "")
-parsed_redis_url = urllib.parse.urlparse(redis_url)
-
-redis_hostname = parsed_redis_url.hostname
-redis_port = parsed_redis_url.port or 6379
-redis_username = parsed_redis_url.username or ''
-redis_password = parsed_redis_url.password or ''
-
 REDIS = {
     'tasks': {
-        'HOST': redis_hostname,
-        'PORT': redis_port,
+        'HOST': os.environ.get("REDIS_DB_HOSTNAME"),
+        'PORT': os.environ.get("REDIS_DB_PORT", "6379"),
         # Comment out `HOST` and `PORT` lines and uncomment the following if using Redis Sentinel
         # 'SENTINELS': [('mysentinel.redis.example.com', 6379)],
         # 'SENTINEL_SERVICE': 'netbox',
-        'USERNAME': redis_username,
-        'PASSWORD': redis_password,
+        'USERNAME': os.environ.get("REDIS_DB_USERNAME", ""),
+        'PASSWORD': os.environ.get("REDIS_DB_PASSWORD", ""),
         'DATABASE': 0,
         'SSL': False,
         # Set this to True to skip TLS certificate verification
@@ -64,13 +53,13 @@ REDIS = {
         # 'CA_CERT_PATH': '/etc/ssl/certs/ca.crt',
     },
     'caching': {
-        'HOST': redis_hostname,
-        'PORT': redis_port,
+        'HOST': os.environ.get("REDIS_DB_HOSTNAME"),
+        'PORT': os.environ.get("REDIS_DB_PORT", "6379"),
         # Comment out `HOST` and `PORT` lines and uncomment the following if using Redis Sentinel
         # 'SENTINELS': [('mysentinel.redis.example.com', 6379)],
         # 'SENTINEL_SERVICE': 'netbox',
-        'USERNAME': redis_username,
-        'PASSWORD': redis_password,
+        'USERNAME': os.environ.get("REDIS_DB_USERNAME", ""),
+        'PASSWORD': os.environ.get("REDIS_DB_PASSWORD", ""),
         'DATABASE': 1,
         'SSL': False,
         # Set this to True to skip TLS certificate verification
