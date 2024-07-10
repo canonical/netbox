@@ -16,7 +16,7 @@ Django Charm entrypoint.
 ## <kbd>class</kbd> `DjangoCharm`
 Django Charm service. 
 
-<a href="../../charm/src/charm.py#L25"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L24"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `__init__`
 
@@ -73,24 +73,7 @@ Unit that this execution is responsible for.
 
 ---
 
-<a href="../../charm/src/charm.py#L114"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
-
-### <kbd>function</kbd> `gen_extra_env`
-
-```python
-gen_extra_env() → dict[str, str]
-```
-
-Return the environment variables for django scripts. 
-
-
-
-**Returns:**
-  dict with environment variables. 
-
----
-
-<a href="../../charm/src/charm.py#L134"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L72"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `restart`
 
@@ -102,7 +85,7 @@ Restart all services.
 
 ---
 
-<a href="../../charm/src/charm.py#L172"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L110"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `workload`
 

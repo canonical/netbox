@@ -5,7 +5,6 @@
 """Django Charm entrypoint."""
 
 import logging
-import re
 import typing
 
 import ops
@@ -29,44 +28,6 @@ class DjangoCharm(paas_app_charmer.django.Charm):
             args: passthrough to CharmBase.
         """
         super().__init__(*args)
-
-        def get_environment_decorator(
-            get_environment_func: typing.Callable[[typing.Any], dict[str, str]]
-        ) -> typing.Callable[[typing.Any], dict[str, str]]:
-            """Decorate for the function to get environment variables.
-
-            At the moment paas-app-charmer does not allow to specify
-            extra environment variables. This disables the possibility of
-            adding extra integrations. As a workaround, decorate (patch)
-            that function using this decorator.
-
-            Args:
-               get_environment_func: get_environment function.
-
-            Returns:
-               the decorated get_environment function
-            """
-
-            def decorated_get_environment(instance: typing.Any) -> dict[str, str]:
-                """get_environment wrapper function.
-
-                Args:
-                    instance: self
-
-                Returns:
-                    environment dict
-                """
-                env = get_environment_func(instance)
-                if "REDIS_DB_CONNECT_STRING" in env and re.fullmatch(
-                    r"redis://[^:/]+:None", env["REDIS_DB_CONNECT_STRING"]
-                ):
-                    del env["REDIS_DB_CONNECT_STRING"]
-                env.update(self.gen_extra_env())
-                return env
-
-            return decorated_get_environment
-
-        WsgiApp.gen_environment = get_environment_decorator(WsgiApp.gen_environment)
 
         def get_wsgi_layer_decorator(
             wsgi_layer: typing.Callable[[typing.Any], ops.pebble.LayerDict]
@@ -107,29 +68,6 @@ class DjangoCharm(paas_app_charmer.django.Charm):
             return decorated_get_wsgi_layer
 
         WsgiApp._wsgi_layer = get_wsgi_layer_decorator(WsgiApp._wsgi_layer)
-
-        self.framework.observe(self._ingress.on.ready, self._on_ingress_ready)
-        self.framework.observe(self._ingress.on.revoked, self._on_ingress_revoked)
-
-    def gen_extra_env(self) -> dict[str, str]:
-        """Return the environment variables for django scripts.
-
-        Returns:
-           dict with environment variables.
-        """
-        env = {}
-        # This is not yet in paas-app-charmer
-        if self._ingress.url:
-            env["DJANGO_BASE_URL"] = self._ingress.url
-        return env
-
-    def _on_ingress_revoked(self, _: ops.HookEvent) -> None:
-        """Handle event for ingress revoked."""
-        self.restart()
-
-    def _on_ingress_ready(self, _: ops.HookEvent) -> None:
-        """Handle event for ingress ready."""
-        self.restart()
 
     def restart(self) -> None:
         """Restart all services."""
