@@ -24,14 +24,6 @@ description: |
     to legacy IPAM and DCIM applications, NetBox provides a cohesive,
     extensive, and accessible data model for all things networked.
 
-parts:
-  # parts are processed in order. We want build packages to be
-  # installed before `charm` part.
-  a-charm-deps:
-    plugin: nil
-    build-packages:
-      - git
-
 links:
   documentation: https://discourse.charmhub.io/t/netbox-documentation-overview/13564
   issues: https://github.com/canonical/netbox/issues
