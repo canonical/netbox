@@ -7,7 +7,7 @@ This tutorial will allow you to test NetBox locally in the easiest possible way 
 ## What you'll do
 
 - Install [Multipass](https://multipass.run)
-- [Launch NetBox with a Multipass VM](#Launch NetBox with a Multipass VM)
+- [Launch NetBox with a Multipass VM](#launch-netbox-with-a-multipass-vm-5)
 
 ## Prerequisites
 
