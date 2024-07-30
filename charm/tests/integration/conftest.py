@@ -216,14 +216,13 @@ async def netbox_app_fixture(
         config={
             "django-debug": False,
             "django-allowed-hosts": "*",
-            "aws-endpoint-url": s3_netbox_configuration["endpoint"],
         },
     )
     # If update_status comes before pebble ready, the unit gets to
     # error state. Just do not fail in that case.
     await model.wait_for_idle(apps=[netbox_app_name], raise_on_error=False)
 
-    await model.relate(f"{netbox_app_name}:storage", f"{s3_integrator_app_name}")
+    await model.relate(f"{netbox_app_name}:s3", f"{s3_integrator_app_name}")
     await model.relate(f"{netbox_app_name}:postgresql", f"{postgresql_app_name}")
     await model.relate(f"{netbox_app_name}:redis", f"{redis_app_name}")
 
