@@ -16,7 +16,7 @@ Django Charm entrypoint.
 ## <kbd>class</kbd> `DjangoCharm`
 Django Charm service. 
 
-<a href="../../charm/src/charm.py#L24"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../../charm/src/charm.py#L23"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `__init__`
 
@@ -70,36 +70,5 @@ Shortcut for more simple access the model.
 Unit that this execution is responsible for. 
 
 
-
----
-
-<a href="../../charm/src/charm.py#L72"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
-
-### <kbd>function</kbd> `restart`
-
-```python
-restart() → None
-```
-
-Restart all services. 
-
----
-
-<a href="../../charm/src/charm.py#L110"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
-
-### <kbd>function</kbd> `workload`
-
-```python
-workload() → Container
-```
-
-Get workload container. 
-
-Delete this function when it is in the paas-app-charmer project. 
-
-
-
-**Returns:**
-  Workload Container 
 
 

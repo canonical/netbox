@@ -41,7 +41,11 @@ parts:
     cron:
       stage-packages:
         - cron
-      plugin: nil
+      plugin: dump
+      source: cron.d
+      organize:
+        housekeeping: etc/cron.d/housekeeping
+        syncdatasource: etc/cron.d/syncdatasource
 
     netbox-post-process:
         after:
@@ -57,8 +61,16 @@ parts:
             chown 584792:584792 django/app/scripts
 
 services:
-  cron:
+  # With the scheduler prefix it will just run in one unit
+  cron-scheduler:
     override: merge
     summary: "Cron Service"
     command: "/usr/sbin/cron -f"
     startup: enabled
+  netbox-rq-worker:
+    override: merge
+    summary: "NetBox Request Queue Worker"
+    command: "/bin/python3 manage.py rqworker high default low"
+    startup: enabled
+    user: _daemon_
+    working-dir: /django/app
