@@ -46,6 +46,8 @@ parts:
       organize:
         housekeeping: etc/cron.d/housekeeping
         syncdatasource: etc/cron.d/syncdatasource
+      permissions:
+        - mode: "644"
 
     netbox-post-process:
         after:
