@@ -5,32 +5,12 @@
 # <kbd>module</kbd> `charm.py`
 Django Charm entrypoint. 
 
-**Global Variables**
----------------
-- **CRON_EVERY_5_MINUTES**
-- **CRON_AT_MIDNIGHT**
 
 
 ---
 
 ## <kbd>class</kbd> `DjangoCharm`
 Django Charm service. 
-
-<a href="../../charm/src/charm.py#L23"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
-
-### <kbd>function</kbd> `__init__`
-
-```python
-__init__(*args: Any) → None
-```
-
-Initialize the instance. 
-
-
-
-**Args:**
- 
- - <b>`args`</b>:  passthrough to CharmBase. 
 
 
 ---
