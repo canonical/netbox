@@ -41,6 +41,9 @@ parts:
     cron:
       stage-packages:
         - cron
+      plugin: nil
+
+    cron-tasks:
       plugin: dump
       source: cron.d
       organize:
