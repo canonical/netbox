@@ -1,0 +1,89 @@
+###########################################
+# IMPORTANT
+# Comments matter!
+# The docs use the wrapping comments as
+# markers for including said instructions
+# as snippets in the docs.
+###########################################
+summary: Getting started with NetBox Tutorial
+
+execute: |
+  . "$CRAFT_TEST_LIB_PATH"/test-helpers.sh
+
+  # configure minio
+  export AWS_ACCESS_KEY_ID=minio
+  export AWS_SECRET_ACCESS_KEY=supersuperkey
+  IPADDR=$(ip -4 -j route get 2.2.2.2 | jq -r '.[] | .prefsrc')
+  export AWS_ENDPOINT_URL="http://${IPADDR}:9000"
+  export AWS_BUCKET=netbox
+  export AWS_REGION=us-west-1
+
+  mkdir -p ${HOME}/minio/data
+  docker run -d -p 9000:9000 -p 9001:9001 --user $(id -u):$(id -g) --name minio -e "MINIO_ROOT_USER=minioadmin" -e "MINIO_ROOT_PASSWORD=minioadmin" -v ${HOME}/minio/data:/data quay.io/minio/minio server /data --console-address ":9001"
+  retry -n 5 --wait 2 docker exec minio mc config host add minio http://127.0.0.1:9000 minioadmin minioadmin
+  docker exec minio mc config host add minio http://127.0.0.1:9000 minioadmin minioadmin
+  docker exec minio mc admin user svcacct add --access-key "${AWS_ACCESS_KEY_ID}" --secret-key "${AWS_SECRET_ACCESS_KEY}" minio minioadmin
+  docker exec minio mc mb "minio/${AWS_BUCKET}"
+  docker exec minio mc ls minio
+  
+  # [docs:juju-add-model]
+  juju add-model netbox-tutorial
+  # [docs:juju-add-model-end]
+
+  # [docs:juju-deploy-netbox]
+  juju deploy netbox
+  # [docs:juju-deploy-netbox-end]
+  
+  # [docs:netbox-config-allowed-hosts]
+  juju config netbox django-allowed-hosts='*'
+  # [docs:netbox-config-allowed-hosts-end]
+
+  # [docs:juju-deploy-redis]
+  juju deploy redis-k8s --channel=latest/edge
+  # [docs:juju-deploy-redis-end]
+
+  # [docs:juju-integrate-redis-netbox]
+  juju integrate redis-k8s netbox
+  # [docs:juju-integrate-redis-netbox-end]
+
+  # [docs:juju-netbox-postgresql]
+  juju deploy postgresql-k8s --channel 14/stable --trust
+  juju integrate postgresql-k8s netbox
+  # [docs:juju-netbox-postgresql-end]
+
+  # [docs:juju-netbox-s3]
+  juju deploy s3-integrator --channel edge
+  juju config s3-integrator endpoint="${AWS_ENDPOINT_URL}" bucket="${AWS_BUCKET}" path=/ region="${AWS_REGION}" s3-uri-style=path
+  juju wait-for application s3-integrator --query='name=="s3-integrator" && (status=="active" || status=="blocked")'
+  juju run s3-integrator/leader sync-s3-credentials access-key="${AWS_ACCESS_KEY_ID}" secret-key="${AWS_SECRET_ACCESS_KEY}"
+  juju integrate s3-integrator netbox
+  # [docs:juju-netbox-s3-end]
+
+  # [docs:traefik]
+  juju deploy traefik-k8s --channel edge --trust
+  # juju config traefik-k8s external_hostname=<netbox_hostname>
+  juju config traefik-k8s routing_mode=path
+  juju integrate traefik-k8s netbox
+  # [docs:traefik-end]
+
+  juju wait-for application traefik-k8s
+  juju wait-for application netbox
+  
+  # [docs:traefik-show-endpoints]
+  juju run traefik-k8s/0 show-proxied-endpoints --format=yaml
+  # [docs:traefik-show-endpoints-end]
+  NETBOX_URL=$( juju run traefik-k8s/0 show-proxied-endpoints --format=json | jq -r '."traefik-k8s/0".results."proxied-endpoints"'  | jq -r '.netbox.url' )
+  curl --fail "${NETBOX_URL}" | grep "Home | NetBox"
+
+
+  COMMAND=(
+  # [docs:netbox-create-superuser]
+  juju run netbox/0 create-superuser username=admin email=admin@example.com
+  # [docs:netbox-create-superuser-end]
+  --format=json
+  )
+  echo ${COMMAND[@]}
+  PASSWORD=$( ${COMMAND[@]} | jq -r '."netbox/0".results.password' )
+
+  # just test that we can get a token with the admin user.
+  curl -H "Accept: application/json" -H "Content-Type: application/json" --fail "${NETBOX_URL}/api/users/tokens/provision/" -X POST -d "{\"username\": \"admin\", \"password\": \"${PASSWORD}\"}"
