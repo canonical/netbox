@@ -1,3 +1,6 @@
+rem Copyright 2024 Canonical Ltd.
+rem See LICENSE file for licensing details.
+
 @ECHO OFF
 
 pushd %~dp0
