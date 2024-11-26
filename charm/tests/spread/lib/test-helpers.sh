@@ -1,3 +1,6 @@
+# Copyright 2024 Canonical Ltd.
+# See LICENSE file for licensing details.
+
 
 export PATH=/snap/bin:$PROJECT_PATH/charm/tests/spread/lib/tools:$PATH
 export CONTROLLER_NAME="craft-test-$PROVIDER"
