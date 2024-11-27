@@ -20,6 +20,7 @@ execute: |
   export AWS_ENDPOINT_URL="http://${IPADDR}:9000"
   export AWS_BUCKET=netbox
   export AWS_REGION=us-west-1
+  export AWS_URI_STYLE=path
 
   mkdir -p ${HOME}/minio/data
   docker run -d -p 9000:9000 -p 9001:9001 --user $(id -u):$(id -g) --name minio -e "MINIO_ROOT_USER=minioadmin" -e "MINIO_ROOT_PASSWORD=minioadmin" -v ${HOME}/minio/data:/data quay.io/minio/minio server /data --console-address ":9001"
@@ -56,16 +57,18 @@ execute: |
 
   # [docs:juju-netbox-s3]
   juju deploy s3-integrator --channel edge
-  juju config s3-integrator endpoint="${AWS_ENDPOINT_URL}" bucket="${AWS_BUCKET}" path=/ region="${AWS_REGION}" s3-uri-style=path
+  juju config s3-integrator endpoint="${AWS_ENDPOINT_URL}" bucket="${AWS_BUCKET}" path=/ region="${AWS_REGION}" s3-uri-style="${AWS_URI_STYLE}"
   juju wait-for application s3-integrator --query='name=="s3-integrator" && (status=="active" || status=="blocked")'
   juju run s3-integrator/leader sync-s3-credentials access-key="${AWS_ACCESS_KEY_ID}" secret-key="${AWS_SECRET_ACCESS_KEY}"
   juju integrate s3-integrator netbox
   # [docs:juju-netbox-s3-end]
 
+  export ROUTING_MODE=path
+  export EXTERNAL_HOSTNAME=
   # [docs:traefik]
   juju deploy traefik-k8s --channel edge --trust
-  # juju config traefik-k8s external_hostname=<netbox_hostname>
-  juju config traefik-k8s routing_mode=path
+  juju config traefik-k8s external_hostname=${EXTERNAL_HOSTNAME}
+  juju config traefik-k8s routing_mode=${ROUTING_MODE}
   juju integrate traefik-k8s netbox
   # [docs:traefik-end]
 

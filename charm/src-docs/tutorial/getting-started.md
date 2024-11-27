@@ -1,3 +1,5 @@
+<!-- This tutorial should be updated in the src-docs directory. -->
+
 # Getting Started
 
 ## What you’ll do
