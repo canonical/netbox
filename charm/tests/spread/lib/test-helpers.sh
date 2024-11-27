@@ -1,5 +1,6 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
+# shellcheck disable=all
 
 
 export PATH=/snap/bin:$PROJECT_PATH/charm/tests/spread/lib/tools:$PATH
