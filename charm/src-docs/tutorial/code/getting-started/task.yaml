@@ -100,3 +100,8 @@ execute: |
 
   # just test that we can get a token with the admin user.
   curl -H "Accept: application/json" -H "Content-Type: application/json" --fail "${NETBOX_URL}/api/users/tokens/provision/" -X POST -d "{\"username\": \"admin\", \"password\": \"${PASSWORD}\"}"
+
+  # [docs:juju-destroy-model]
+  juju destroy-model netbox-tutorial
+  # [docs:juju-destroy-model-end]
+  

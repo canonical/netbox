@@ -122,7 +122,7 @@ Once the s3-integrator charm has been deployed, integrate the charm with NetBox:
 :dedent: 2
 ```
 
-See the [s3-integrator charmhub page](https://charmhub.io/s3-integrator) for more information.
+See the [s3-integrator Charmhub page](https://charmhub.io/s3-integrator) for more information.
 
 ### Deploy the traefik-k8s charm
 
@@ -159,3 +159,14 @@ To be able to log in to NetBox, you can create a super user with the next comman
 Congratulations, With the username created and the password provided in the response, 
 you have now full access to your own NetBox!
 
+# Clean up the Environment
+
+Well done! You've successfully completed the NetBox tutorial. To remove the
+model environment you created during this tutorial, use the following command.
+
+```{literalinclude} code/getting-started/task.yaml
+:language: bash
+:start-after: [docs:juju-destroy-model]
+:end-before: [docs:juju-destroy-model-end]
+:dedent: 2
+```
