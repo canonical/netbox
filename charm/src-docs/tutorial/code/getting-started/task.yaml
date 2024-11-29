@@ -55,11 +55,18 @@ execute: |
   juju integrate postgresql-k8s netbox
   # [docs:juju-netbox-postgresql-end]
 
-  # [docs:juju-netbox-s3]
+  
+  # [docs:juju-deploy-s3]
   juju deploy s3-integrator --channel edge
+  # [docs:juju-deploy-s3-end]
+  
+  # [docs:juju-config-s3]
   juju config s3-integrator endpoint="${AWS_ENDPOINT_URL}" bucket="${AWS_BUCKET}" path=/ region="${AWS_REGION}" s3-uri-style="${AWS_URI_STYLE}"
   juju wait-for application s3-integrator --query='name=="s3-integrator" && (status=="active" || status=="blocked")'
   juju run s3-integrator/leader sync-s3-credentials access-key="${AWS_ACCESS_KEY_ID}" secret-key="${AWS_SECRET_ACCESS_KEY}"
+  # [docs:juju-config-s3-end]
+
+  # [docs:juju-netbox-s3]
   juju integrate s3-integrator netbox
   # [docs:juju-netbox-s3-end]
 
