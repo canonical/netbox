@@ -102,6 +102,6 @@ execute: |
   curl -H "Accept: application/json" -H "Content-Type: application/json" --fail "${NETBOX_URL}/api/users/tokens/provision/" -X POST -d "{\"username\": \"admin\", \"password\": \"${PASSWORD}\"}"
 
   # [docs:juju-destroy-model]
-  juju destroy-model netbox-tutorial
+  juju destroy-model netbox-tutorial --destroy-storage --no-prompt
   # [docs:juju-destroy-model-end]
   
