@@ -156,8 +156,10 @@ To be able to log in to NetBox, you can create a super user with the next comman
 :dedent: 2
 ```
 
-Congratulations, With the username created and the password provided in the response, 
-you have now full access to your own NetBox!
+Congratulations! Your username has been created, and the password provided in the response
+gives you full access to your NetBox. Simply visit http://netbox_hostname/netbox-tutorial-netbox
+and log in using your username and password.
+
 
 # Clean up the Environment
 
