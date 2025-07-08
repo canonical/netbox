@@ -10,3 +10,4 @@ jobs:
     with:
       charm-directory: "charm"
       shellcheck-working-directory: "./charm"
+      vale-style-check: true
