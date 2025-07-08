@@ -12,9 +12,7 @@ Through the process, you'll verify the workload state, and log in to
 your NetBox instance.
 
 ## Requirements
-<!-- vale Canonical.013-Spell-out-numbers-below-10 = NO -->
-- Juju 3 installed.
-<!-- vale Canonical.013-Spell-out-numbers-below-10 = YES -->
+- Juju 3.x installed.
 - Juju controller that can create a model of type kubernetes.
 - Read/write access to a S3 compatible server with a bucket created.
 - Configuration compatible with the traefik-k8s charms. In the case of MicroK8s this can be achieved with the `metallb` add-on.

@@ -14,9 +14,9 @@ For the static assets, `gunicorn` is used with the help of the [WhiteNoiseMiddle
 
 There is only one container for each unit of NetBox that runs the following
 services managed by Pebble:
-- `django`. Runs `gunicorn`.
-- `cron`. `Cron` service that runs management commands for `housekeeping` and `syncdatasource`.
-- `statsd_exporter`. To expose `gunicorn` metrics.
+- `django`: runs `gunicorn`.
+- `cron`: periodically runs the `housekeeping` and `syncdatasource` management commands.
+- `statsd_exporter`: exposes `gunicorn` metrics.
 
 Besides the integrations provided directly by the paas-app-charmer tool chain, the following
 integrations are implemented in NetBox:

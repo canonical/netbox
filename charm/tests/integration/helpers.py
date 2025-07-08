@@ -88,4 +88,7 @@ async def get_unit_ips(application: Application) -> list[str]:
         all the unit ips
     """
     status = await application.model.get_status()
-    return [unit.address for unit in status.applications[application.name].units.values()]
+    return [
+        unit.address  # type: ignore
+        for unit in status.applications[application.name].units.values()  # type: ignore
+    ]
