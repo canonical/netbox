@@ -18,11 +18,9 @@ examines:
   - code quality
   - test coverage
   - user experience for Juju operators of this charm
-- Please help us out in ensuring easy to review branches by rebasing your pull
+- Please help us out in ensuring easy to review branches. Rebase your pull
 request branch onto the `main` branch. This also avoids merge commits and
 creates a linear Git commit history.
-- Please generate src documentation for every commit. See the section below for
-more details.
 
 ## Developing
 
@@ -41,7 +39,7 @@ source .tox/unit/bin/activate
 
 ### Testing
 
-Note that the [NetBox](../rockcraft.yaml) image needs to be built and pushed to microk8s
+Note that the [NetBox](../rockcraft.yaml) image needs to be built and pushed to MicroK8s
 for the tests to run. They should be tagged as `localhost:32000/netbox:latest` so that
 Kubernetes knows how to pull them from the MicroK8s repository. Note that the MicroK8s 
 registry needs to be enabled using `microk8s enable registry`. More details regarding 
@@ -54,15 +52,6 @@ the OCI images below. The following commands can then be used to run the tests:
 * `tox -e unit`: Runs the unit tests.
 * `tox -e integration`: Runs the integration tests.
 
-### Generating src docs for every commit
-
-Run the following command:
-
-```bash
-echo -e "tox -e src-docs\ngit add charm/src-docs\n" >> .git/hooks/pre-commit
-chmod +x .git/hooks/pre-commit
-```
-
 ## Build charm
 
 Build the charm in this git repository using:
@@ -71,15 +60,20 @@ Build the charm in this git repository using:
 pushd charm && charmcraft pack && popd
 ```
 For the integration tests (and also to deploy the charm locally), the netbox
-image is required in the microk8s registry. To enable it:
+image is required in the MicroK8s registry. To enable it:
 
+```shell
     microk8s enable registry
+```
 
 The following commands import the images in the Docker daemon and push them into
 the registry:
 
+```shell
+    microk8s enable registry
     cd [project_dir] && rockcraft pack
     rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false oci-archive:netbox_0.1_amd64.rock docker://localhost:32000/netbox:latest
+```
 
 ### Deploy
 
@@ -112,7 +106,7 @@ the configuration option `django-allowed-hosts` like:
 juju config netbox django-allowed-hosts='*'
 ```
 
-The NetBox charm requires a postgresql_client interface to work.
+The NetBox charm requires a `postgresql_client` interface to work.
 Thanks to Juju, this can be easily configured with:
 ```bash
 juju deploy postgresql-k8s --channel 14/stable --trust
@@ -120,6 +114,6 @@ juju wait-for application postgresql-k8s
 juju integrate postgresql-k8s netbox
 ```
 
-## Canonical Contributor Agreement
+## Canonical contributor agreement
 
 Canonical welcomes contributions to the NetBox Operator. Please check out our [contributor agreement](https://ubuntu.com/legal/contributors) if you're interested in contributing to the solution.

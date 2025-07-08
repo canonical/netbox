@@ -30,7 +30,7 @@ pod gets rescheduled, those files will be lost.
 Giving the limitations of NetBox for scripts and reports, the alternative
 is using a Data Source, and creating the scripts and reports from
 the Data Source, using the "Auto sync enabled" checkbox. Using this checkbox,
-the scripts and reports will be synchronized every 5 minutos in all
+the scripts and reports will be synchronized every five minutes in all
 units. See [Configure Scripts and Reports for HA](how-to/configure-scripts-reports.md)
 for more information.
 
