@@ -30,4 +30,10 @@ Build the charm in this git repository using:
 charmcraft pack
 ```
 
-<!-- You may want to include any contribution/style guidelines in this document>
+## Run the integration tests locally
+
+To be able to run the tests locally, you will first need to install and configure localstack. Run the `localstack-installation.sh` to do it.
+
+You will also need:
+- The charm to be built (see [Build the charm])
+- The rock to be built (see [Build the rock])

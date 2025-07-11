@@ -7,12 +7,12 @@
 import logging
 
 import ops
-import paas_app_charmer.django
+import paas_charm.django
 
 logger = logging.getLogger(__name__)
 
 
-class DjangoCharm(paas_app_charmer.django.Charm):
+class DjangoCharm(paas_charm.django.Charm):
     """Django Charm service."""
 
 
