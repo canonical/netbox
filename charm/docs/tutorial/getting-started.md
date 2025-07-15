@@ -1,4 +1,4 @@
-# Getting Started
+# Getting started
 
 ## What you’ll do
 - Deploy the NetBox charm.
@@ -12,15 +12,15 @@ Through the process, you'll verify the workload state, and log in to
 your NetBox instance.
 
 ## Requirements
-- Juju 3 installed.
+- Juju 3.x installed.
 - Juju controller that can create a model of type kubernetes.
 - Read/write access to a S3 compatible server with a bucket created.
-- Configuration compatible with the traefik-k8s charms. In the case of MicroK8S this can be achieved with the metallb addon.
+- Configuration compatible with the traefik-k8s charms. In the case of MicroK8s this can be achieved with the `metallb` add-on.
 
 For more information about how to install Juju, see [Get started with Juju](https://juju.is/docs/olm/get-started-with-juju).
 
 
-## Setting up a Tutorial Model
+## Setting up a tutorial model
 
 To manage resources effectively and to separate this tutorial's workload from
 your usual work, we recommend creating a new model using the following command.
@@ -67,7 +67,7 @@ juju deploy postgresql-k8s --channel 14/stable --trust
 juju integrate postgresql-k8s netbox
 ```
 
-### Deploy s3-integrator
+### Deploy `s3-integrator`
 
 NetBox requires an S3 integration for the uploaded files. This is because
 the NetBox charm is designed to work in a high availability (HA) configuration.
@@ -85,7 +85,7 @@ juju integrate s3-integrator netbox
 
 See the [s3-integrator charmhub page](https://charmhub.io/s3-integrator) for more information.
 
-### Deploy traefik-k8s 
+### Deploy `traefik-k8s` 
 
 You need to enable MetalLb if using MicroK8s. See the [traefik-k8s charmhub page](https://charmhub.io/traefik-k8s) for more information.
 
@@ -98,9 +98,9 @@ juju integrate traefik-k8s netbox
 ```
 
 If the host `netbox_hostname` can be resolved to the correct IP (the load balancer IP),
-you should be able to browse NetBox in the url http://netbox_hostname/netbox-tutorial-netbox
+you should be able to browse NetBox in the URL http://netbox_hostname/netbox-tutorial-netbox
 
-You can check the proxied endpoints with the command:
+You can check the endpoints behind the proxy with the command:
 ```
 juju run traefik-k8s/0 show-proxied-endpoints --format=yaml
 ```

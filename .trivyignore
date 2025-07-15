@@ -1,0 +1,9 @@
+# setuptools (METADATA)
+CVE-2022-40897
+CVE-2024-6345
+CVE-2025-47273
+# usr/bin/statsd_exporter (gobinary)
+CVE-2024-45337
+CVE-2025-22869
+# pebble
+CVE-2025-22874  

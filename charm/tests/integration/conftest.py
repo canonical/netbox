@@ -1,4 +1,4 @@
-# Copyright 2024 Canonical Ltd.
+# Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """Fixtures for the NetBox charm integration tests."""
@@ -112,6 +112,8 @@ async def postgresql_app_fixture(
     pytestconfig: Config,
 ) -> Application:
     """Deploy postgresql."""
+    if postgresql_app_name in model.applications:
+        return model.applications[postgresql_app_name]
     async with ops_test.fast_forward():
         app = await model.deploy(postgresql_app_name, channel="14/stable", trust=True)
         await model.wait_for_idle(apps=[postgresql_app_name], status="active")
@@ -155,10 +157,13 @@ async def s3_integrator_app_fixture(
     s3_netbox_credentials: dict,
 ):
     """Returns a s3-integrator app configured with parameters."""
+    if "s3-integrator" in model.applications:
+        return model.applications["s3-integrator"]
+
     s3_integrator_app = await model.deploy(
         "s3-integrator",
         application_name=s3_integrator_app_name,
-        channel="latest/edge",
+        channel="1/stable",
         config=s3_netbox_configuration,
     )
     await model.wait_for_idle(apps=[s3_integrator_app_name], idle_period=5, status="blocked")
@@ -207,6 +212,9 @@ async def netbox_app_fixture(
     s3_integrator_app: Application,
 ) -> Application:
     """Deploy netbox app."""
+    if netbox_app_name in model.applications:
+        return model.applications[netbox_app_name]
+
     resources = {
         "django-app-image": netbox_app_image,
     }
@@ -238,6 +246,9 @@ async def redis_app_fixture(
     pytestconfig: Config,
 ) -> Application:
     """Deploy redis-k8s."""
+    if redis_app_name in model.applications:
+        return model.applications[redis_app_name]
+
     app = await model.deploy(redis_app_name, channel="edge")
     await model.wait_for_idle(apps=[redis_app_name], status="active")
     return app

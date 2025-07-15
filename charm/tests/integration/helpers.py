@@ -1,4 +1,4 @@
-# Copyright 2024 Canonical Ltd.
+# Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """Helper functions for integration tests."""
@@ -88,4 +88,7 @@ async def get_unit_ips(application: Application) -> list[str]:
         all the unit ips
     """
     status = await application.model.get_status()
-    return [unit.address for unit in status.applications[application.name].units.values()]
+    return [
+        unit.address  # type: ignore
+        for unit in status.applications[application.name].units.values()  # type: ignore
+    ]
