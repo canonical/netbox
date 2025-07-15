@@ -70,7 +70,6 @@ The following commands import the images in the Docker daemon and push them into
 the registry:
 
 ```shell
-    microk8s enable registry
     cd [project_dir] && rockcraft pack
     rockcraft.skopeo --insecure-policy copy --dest-tls-verify=false oci-archive:netbox_0.1_amd64.rock docker://localhost:32000/netbox:latest
 ```
