@@ -163,7 +163,7 @@ async def s3_integrator_app_fixture(
     s3_integrator_app = await model.deploy(
         "s3-integrator",
         application_name=s3_integrator_app_name,
-        channel="latest/edge",
+        channel="1/stable",
         config=s3_netbox_configuration,
     )
     await model.wait_for_idle(apps=[s3_integrator_app_name], idle_period=5, status="blocked")
@@ -212,6 +212,9 @@ async def netbox_app_fixture(
     s3_integrator_app: Application,
 ) -> Application:
     """Deploy netbox app."""
+    if netbox_app_name in model.applications:
+        return model.applications[netbox_app_name]
+
     resources = {
         "django-app-image": netbox_app_image,
     }
