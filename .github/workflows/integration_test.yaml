@@ -16,5 +16,3 @@ jobs:
       rockcraft-channel: latest/edge
       charmcraft-channel: latest/edge
       charm-directory: "charm"
-      tmate-debug: true
-      tmate-timeout: 30
