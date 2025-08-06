@@ -36,7 +36,7 @@ for more information.
 
 ## Other resources
 
-* [Netbox upstream repository](https://github.com/netbox-community/netbox)
+* [NetBox upstream repository](https://github.com/netbox-community/netbox)
 * [Get support](https://discourse.charmhub.io/)
 * [Join our online chat](https://matrix.to/#/#charmhub-charmdev:ubuntu.com)
 * [Contribute](https://charmhub.io/netbox/docs/contributing)
@@ -62,7 +62,7 @@ missing, please [file a bug](https://github.com/canonical/netbox/issues).
 
 1. [Tutorial](tutorial)
   1. [Getting Started](tutorial/getting-started.md)
-  1. [Testing Netbox](tutorial/testing-netbox.md)
+  1. [Testing NetBox](tutorial/testing-netbox.md)
 1. [How To](how-to)
   1. [Contribute](how-to/contribute.md)
   2. [Configure SAML](how-to/configure-saml.md)

@@ -1,4 +1,4 @@
-# NetBox charm architecture
+# Charm architecture
 
 The NetBox charm initial version has been generated with the help of
 the [paas-app-charmer](https://github.com/canonical/paas-app-charmer/)

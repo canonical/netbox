@@ -13,7 +13,7 @@ your NetBox instance.
 
 ## Requirements
 - Juju 3.x installed.
-- Juju controller that can create a model of type kubernetes.
+- Juju controller that can create a model of type Kubernetes.
 - Read/write access to a S3 compatible server with a bucket created.
 - Configuration compatible with the traefik-k8s charms. In the case of MicroK8s this can be achieved with the `metallb` add-on.
 
@@ -29,11 +29,10 @@ your usual work, we recommend creating a new model using the following command.
 juju add-model netbox-tutorial
 ```
 
-## Deploy the NetBox charm
+## Deploy
 
 Deploy the NetBox charm, with all its mandatory requirements (PostgreSQL, Redis and S3).
 
-### Deploy the charms:
 ```
 juju deploy netbox
 ```

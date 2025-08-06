@@ -1,4 +1,6 @@
-# Testing NetBox
+<!-- vale Canonical.007-Headings-sentence-case = NO -->
+# Test NetBox
+<!-- vale Canonical.007-Headings-sentence-case = YES -->
 
 We recommend the [Getting Started Tutorial](./getting-started.md) to get familiarised with NetBox in a Juju deployment.
 
@@ -21,7 +23,9 @@ as the NetBox charm is only built for amd64.
 
 Follow the instruction in [https://multipass.run/install](https://multipass.run/install).
 
+<!-- vale Canonical.007-Headings-sentence-case = NO -->
 ## Launch NetBox with a Multipass VM
+<!-- vale Canonical.007-Headings-sentence-case = YES -->
 
 You will launch a VM named `netbox` with Multipass, using the
 [cloud init configuration](https://raw.githubusercontent.com/canonical/netbox/main/charm/cloudinit-juju-3.1.yaml)
