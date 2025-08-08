@@ -86,7 +86,7 @@ juju deploy ./charm/netbox_ubuntu-22.04-amd64.charm \
   --resource django-app-image=localhost:32000/netbox:latest
 ```
 
-### Configure NetBox
+### Configure
 
 NetBox requires a Redis integration to work correctly. This can be
 done with:
