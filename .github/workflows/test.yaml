@@ -11,3 +11,4 @@ jobs:
       charm-directory: "charm"
       shellcheck-working-directory: "./charm"
       vale-style-check: true
+      vale-files: '["charm/docs/**/*.md", "README.md"]' 
