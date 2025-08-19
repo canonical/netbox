@@ -1,3 +1,5 @@
+<!-- vale Canonical.007-Headings-sentence-case = NO -->
+
 # NetBox Operator
 
 This repository contains NetBox plus a Juju charm for deploying and managing NetBox on Kubernetes. See [charm README](./charm/README.md) for more information.
