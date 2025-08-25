@@ -28,6 +28,7 @@ async def test_netbox_health(netbox_app: Application) -> None:
     assert: Both return 200 and the page contains the correct title.
     """
     unit_ips = await get_unit_ips(netbox_app)
+    print(unit_ips)
     for unit_ip in unit_ips:
 
         url = f"http://{unit_ip}:8000"
